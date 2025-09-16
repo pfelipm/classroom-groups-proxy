@@ -1,0 +1,405 @@
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  
+  // --- VARIABLES Y ELEMENTOS DEL DOM ---
+  let currentLang = 'es';
+  let userInfo = {};
+  const elements = {
+    loader: document.getElementById('loader'),
+    appContent: document.getElementById('app-content'),
+    notificationArea: document.getElementById('notification-area'),
+    langSwitcher: document.getElementById('lang-switcher'),
+    courseSelect: document.getElementById('course-select'),
+    exportCoursesBtn: document.getElementById('export-courses-btn'),
+    usersSection: document.getElementById('users-section'),
+    teachersList: document.getElementById('teachers-list'),
+    studentsList: document.getElementById('students-list'),
+    selectAllTeachers: document.getElementById('select-all-teachers'),
+    selectAllStudents: document.getElementById('select-all-students'),
+    exportUsersBtn: document.getElementById('export-users-btn'),
+    groupCreationSection: document.getElementById('group-creation-section'),
+    createGroupBtn: document.getElementById('create-group-btn'),
+    makeGroupVisibleCheck: document.getElementById('make-group-visible-check'),
+    courseEmailsSection: document.getElementById('course-emails-section'),
+    teacherGroupEmailSpan: document.getElementById('teacher-group-email'),
+    courseGroupEmailSpan: document.getElementById('course-group-email'),
+    copyTeacherEmailBtn: document.getElementById('copy-teacher-email-btn'),
+    copyCourseEmailBtn: document.getElementById('copy-course-email-btn')
+  };
+
+  // --- DICCIONARIO DE TRADUCCIONES (i18n) ---
+  const translations = {
+    es: {
+      appTitle: "Classroom Groups Proxy",
+      madeBy: "Hecho con 🩵 por",
+      appDescription: "Esta aplicación te permite buscar tus clases de Classroom, ver sus participantes y crear grupos de Google con ellos de forma sencilla.",
+      loading: "Cargando...",
+      coursesSectionTitle: "1. Cursos de Classroom",
+      selectCourseLabel: "Selecciona una clase",
+      selectCourseDefault: "--- Por favor, selecciona una clase ---",
+      exportCoursesBtn: "Exportar Lista de Cursos a CSV",
+      courseEmailsSectionTitle: "Grupos Automáticos de Classroom",
+      teacherGroupEmailLabel: "Email del grupo de profesores",
+      courseGroupEmailLabel: "Email del grupo de la clase (profesores y alumnos)",
+      copyBtnText: "Copiar al portapapeles",
+      copySuccessText: "¡Copiado!",
+      courseEmailsDescription: "Classroom crea automáticamente estas direcciones. Úsalas para compartir recursos en Drive o eventos de Calendar sin necesidad de crear un nuevo grupo.",
+      usersSectionTitle: "2. Usuarios de la Clase Seleccionada",
+      teachersListTitle: "Profesores",
+      studentsListTitle: "Alumnos",
+      selectAll: "Seleccionar todos",
+      exportUsersBtn: "Exportar Usuarios de esta Clase a CSV",
+      groupCreationSectionTitle: "3. Crear Grupo de Google",
+      groupCreationDescription: "Se creará un grupo con los usuarios seleccionados. El email del grupo se generará automáticamente.",
+      createGroupBtn: "Crear Grupo",
+      makeGroupVisibleLabel: "Hacer visible en Google Grupos (con archivo de conversaciones)",
+      errorTitle: "Error",
+      warningTitle: "Aviso",
+      successTitle: "Éxito",
+      noCoursesFound: "No se encontraron clases en las que seas profesor.",
+      courseFetchError: "Ocurrió un error al cargar tus clases.",
+      userFetchError: "Ocurrió un error al cargar los usuarios de la clase.",
+      groupCreateSuccess: "¡Grupo creado con éxito!",
+      groupCreateError: "Ocurrió un error al crear el grupo.",
+      groupExistsError: "El grupo con email {{groupEmail}} ya existe.",
+      exportError: "No hay datos para exportar.",
+      noUsersSelected: "Por favor, selecciona al menos un usuario para crear el grupo.",
+    },
+    en: {
+      appTitle: "Classroom Groups Proxy",
+      madeBy: "Made with 🩵 by",
+      appDescription: "This application allows you to find your Classroom courses, see their participants, and easily create Google Groups with them.",
+      loading: "Loading...",
+      coursesSectionTitle: "1. Classroom Courses",
+      selectCourseLabel: "Select a class",
+      selectCourseDefault: "--- Please select a class ---",
+      exportCoursesBtn: "Export Course List to CSV",
+      courseEmailsSectionTitle: "Automatic Classroom Groups",
+      teacherGroupEmailLabel: "Teachers group email",
+      courseGroupEmailLabel: "Class group email (teachers and students)",
+      copyBtnText: "Copy to clipboard",
+      copySuccessText: "Copied!",
+      courseEmailsDescription: "Classroom automatically creates these addresses. Use them to share resources in Drive or Calendar events without needing to create a new group.",
+      usersSectionTitle: "2. Users from Selected Class",
+      teachersListTitle: "Teachers",
+      studentsListTitle: "Students",
+      selectAll: "Select all",
+      exportUsersBtn: "Export Users from this Class to CSV",
+      groupCreationSectionTitle: "3. Create Google Group",
+      groupCreationDescription: "A group will be created with the selected users. The group email will be generated automatically.",
+      createGroupBtn: "Create Group",
+      makeGroupVisibleLabel: "Make visible in Google Groups (with conversation archive)",
+      errorTitle: "Error",
+      warningTitle: "Warning",
+      successTitle: "Success",
+      noCoursesFound: "No courses found where you are a teacher.",
+      courseFetchError: "An error occurred while loading your courses.",
+      userFetchError: "An error occurred while loading users for the class.",
+      groupCreateSuccess: "Group created successfully!",
+      groupCreateError: "An error occurred while creating the group.",
+      groupExistsError: "The group with email {{groupEmail}} already exists.",
+      exportError: "There is no data to export.",
+      noUsersSelected: "Please select at least one user to create the group.",
+    }
+  };
+
+  // --- FUNCIONES DE LA APLICACIÓN ---
+
+  /** Muestra u oculta el spinner de carga */
+  const showLoader = (show) => {
+    elements.loader.style.display = show ? 'block' : 'none';
+    elements.appContent.style.display = show ? 'none' : 'block';
+  };
+  
+  /** Muestra una notificación (alerta de Bootstrap) */
+  const showNotification = (message, type = 'warning') => {
+    let title = '';
+    let alertClass = '';
+    switch(type) {
+        case 'success':
+            title = translations[currentLang].successTitle;
+            alertClass = 'alert-success';
+            break;
+        case 'warning':
+        case 'danger': // Errores y avisos usarán el mismo color naranja
+            title = (type === 'danger') ? translations[currentLang].errorTitle : translations[currentLang].warningTitle;
+            alertClass = 'alert-warning';
+            break;
+        default:
+            title = translations[currentLang].warningTitle;
+            alertClass = 'alert-warning';
+    }
+    const alertHtml = `
+      <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+        <strong>${title}:</strong> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>`;
+    elements.notificationArea.innerHTML = alertHtml;
+  };
+
+  /** Cambia el idioma de la interfaz */
+  const setLanguage = (lang) => {
+    // Borra cualquier notificación anterior para evitar inconsistencias de idioma.
+    elements.notificationArea.innerHTML = '';
+    
+    currentLang = lang;
+    elements.langSwitcher.textContent = lang === 'es' ? 'EN' : 'ES';
+    
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (translations[lang][key]) {
+        el.textContent = translations[lang][key];
+      }
+    });
+
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+      const key = el.getAttribute('data-i18n-title');
+      if (translations[lang][key]) {
+        el.title = translations[lang][key];
+      }
+    });
+    
+    if(elements.courseSelect.options[0]) {
+       elements.courseSelect.options[0].textContent = translations[currentLang].selectCourseDefault;
+    }
+  };
+
+  /** Copia un texto al portapapeles y muestra feedback en el botón */
+  const copyToClipboard = (text, button) => {
+    if (!text || text === 'N/A') return;
+    navigator.clipboard.writeText(text).then(() => {
+      const originalContent = button.innerHTML;
+      const originalTitle = button.title;
+      button.innerHTML = `<i class="bi bi-check-lg"></i> ${translations[currentLang].copySuccessText}`;
+      button.classList.add('btn-success');
+      button.classList.remove('btn-outline-secondary');
+      button.disabled = true;
+
+      setTimeout(() => {
+        button.innerHTML = originalContent;
+        button.title = originalTitle;
+        button.classList.remove('btn-success');
+        button.classList.add('btn-outline-secondary');
+        button.disabled = false;
+      }, 2000);
+    }).catch(err => {
+      console.error('Error al copiar al portapapeles', err);
+      showNotification('No se pudo copiar el texto.', 'danger');
+    });
+  };
+
+  /** Descarga contenido como un fichero CSV */
+  const downloadCsv = (csvContent, filename) => {
+    if (!csvContent) {
+      showNotification(translations[currentLang].exportError, 'warning');
+      return;
+    }
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  
+  /** Rellena el selector con los cursos obtenidos del backend */
+  const populateCourses = (courses) => {
+    elements.courseSelect.innerHTML = `<option value="">${translations[currentLang].selectCourseDefault}</option>`;
+    if (courses && courses.length > 0) {
+      courses.forEach(course => {
+        const option = document.createElement('option');
+        option.value = course.id;
+        option.textContent = `${course.name} - ${course.section}`;
+        option.dataset.courseName = course.name;
+        option.dataset.teacherGroupEmail = course.teacherGroupEmail;
+        option.dataset.courseGroupEmail = course.courseGroupEmail;
+        elements.courseSelect.appendChild(option);
+      });
+    } else {
+      showNotification(translations[currentLang].noCoursesFound, 'warning');
+    }
+    showLoader(false);
+  };
+  
+  /** Rellena las listas de usuarios (profesores y alumnos) */
+  const populateUsers = (data) => {
+    const createUserCheckbox = (user) => `
+      <div class="form-check">
+        <input class="form-check-input user-checkbox" type="checkbox" value="${user.email}" id="user-${user.id}">
+        <label class="form-check-label" for="user-${user.id}">${user.name} (${user.email})</label>
+      </div>`;
+
+    elements.teachersList.innerHTML = data.teachers.map(createUserCheckbox).join('');
+    elements.studentsList.innerHTML = data.students.map(createUserCheckbox).join('');
+    elements.selectAllTeachers.checked = false;
+    elements.selectAllStudents.checked = false;
+    elements.usersSection.style.display = 'block';
+    elements.groupCreationSection.style.display = 'block';
+    showLoader(false);
+  };
+
+  /** Gestiona la selección/deselección de todos los checkboxes en una lista */
+  const handleSelectAll = (masterCheckbox, listContainer) => {
+    const checkboxes = listContainer.querySelectorAll('.user-checkbox');
+    checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
+  };
+
+  // --- EVENT LISTENERS ---
+
+  elements.langSwitcher.addEventListener('click', () => {
+    setLanguage(currentLang === 'es' ? 'en' : 'es');
+  });
+
+  elements.courseSelect.addEventListener('change', (e) => {
+    const courseId = e.target.value;
+    elements.usersSection.style.display = 'none';
+    elements.groupCreationSection.style.display = 'none';
+    elements.courseEmailsSection.style.display = 'none';
+
+    if (courseId) {
+      const selectedOption = e.target.options[e.target.selectedIndex];
+      const teacherEmail = selectedOption.dataset.teacherGroupEmail;
+      const courseEmail = selectedOption.dataset.courseGroupEmail;
+      
+      elements.teacherGroupEmailSpan.textContent = teacherEmail;
+      elements.courseGroupEmailSpan.textContent = courseEmail;
+      elements.courseEmailsSection.style.display = 'block';
+
+      showLoader(true);
+      google.script.run
+        .withSuccessHandler(populateUsers)
+        .withFailureHandler(err => {
+          showNotification(`${translations[currentLang].userFetchError} ${err.message}`, 'danger');
+          showLoader(false);
+        })
+        .obtenerUsuarios(courseId);
+    }
+  });
+  
+  elements.copyTeacherEmailBtn.addEventListener('click', (e) => {
+    const textToCopy = elements.teacherGroupEmailSpan.textContent;
+    copyToClipboard(textToCopy, e.currentTarget);
+  });
+
+  elements.copyCourseEmailBtn.addEventListener('click', (e) => {
+    const textToCopy = elements.courseGroupEmailSpan.textContent;
+    copyToClipboard(textToCopy, e.currentTarget);
+  });
+
+  elements.exportCoursesBtn.addEventListener('click', () => {
+    showLoader(true);
+    google.script.run
+      .withSuccessHandler(csv => {
+        downloadCsv(csv, 'classroom-courses.csv');
+        showLoader(false);
+      })
+      .withFailureHandler(err => {
+         showNotification(err.message, 'danger');
+         showLoader(false);
+      })
+      .exportarCursosCsv();
+  });
+
+  elements.exportUsersBtn.addEventListener('click', () => {
+     const courseId = elements.courseSelect.value;
+     if (!courseId) return;
+     showLoader(true);
+     google.script.run
+      .withSuccessHandler(csv => {
+        downloadCsv(csv, `course-${courseId}-users.csv`);
+        showLoader(false);
+      })
+      .withFailureHandler(err => {
+         showNotification(err.message, 'danger');
+         showLoader(false);
+      })
+      .exportarUsuariosCsv(courseId);
+  });
+  
+  elements.selectAllTeachers.addEventListener('change', () => handleSelectAll(elements.selectAllTeachers, elements.teachersList));
+  elements.selectAllStudents.addEventListener('change', () => handleSelectAll(elements.selectAllStudents, elements.studentsList));
+
+  elements.createGroupBtn.addEventListener('click', () => {
+    const courseId = elements.courseSelect.value;
+    const selectedOption = elements.courseSelect.options[elements.courseSelect.selectedIndex];
+    const courseName = selectedOption.dataset.courseName;
+
+    const selectedUsers = Array.from(document.querySelectorAll('.user-checkbox:checked')).map(cb => cb.value);
+
+    if (selectedUsers.length === 0) {
+      showNotification(translations[currentLang].noUsersSelected, 'warning');
+      return;
+    }
+    
+    showLoader(true);
+    const groupData = {
+      courseId: courseId,
+      courseName: courseName,
+      members: selectedUsers,
+      ownerEmail: userInfo.email,
+      domain: userInfo.domain,
+      makeVisible: elements.makeGroupVisibleCheck.checked
+    };
+
+    google.script.run
+      .withSuccessHandler(response => {
+        showLoader(false);
+        if (response.success) {
+          showNotification(`${translations[currentLang].groupCreateSuccess} Email: ${response.groupEmail}`, 'success');
+        } else {
+          showNotification(response.message || translations[currentLang].groupCreateError, 'danger');
+        }
+      })
+      .withFailureHandler(err => {
+        showLoader(false);
+        let finalMessage = '';
+        try {
+            const errorObj = JSON.parse(err.message);
+            if (errorObj.key && translations[currentLang][errorObj.key]) {
+                finalMessage = translations[currentLang][errorObj.key];
+                if (errorObj.params) {
+                    for (const [key, value] of Object.entries(errorObj.params)) {
+                        finalMessage = finalMessage.replace(`{{${key}}}`, value);
+                    }
+                }
+            } else {
+                finalMessage = err.message;
+            }
+        } catch (e) {
+            finalMessage = `${translations[currentLang].groupCreateError}: ${err.message}`;
+        }
+        showNotification(finalMessage, 'danger');
+      })
+      .crearGrupoDeClase(groupData);
+  });
+
+  // --- INICIALIZACIÓN ---
+  const initialize = () => {
+    showLoader(true);
+    setLanguage('es');
+    
+    google.script.run
+      .withSuccessHandler(info => {
+        userInfo = info;
+        google.script.run
+          .withSuccessHandler(populateCourses)
+          .withFailureHandler(err => {
+            showNotification(`${translations[currentLang].courseFetchError}: ${err.message}`, 'danger');
+            showLoader(false);
+          })
+          .obtenerCursos();
+      })
+      .withFailureHandler(err => {
+        showNotification(`Error fatal al obtener información del usuario: ${err.message}`, 'danger');
+        showLoader(false);
+      })
+      .obtenerInfoUsuario();
+  };
+
+  initialize();
+});
+</script>
+

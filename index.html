@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" xintegrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <style>
+      .user-list { max-height: 250px; overflow-y: auto; }
+      #loader { display: none; }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container-fluid">
+        <div>
+          <a class="navbar-brand" href="#" data-i18n="appTitle">Classroom Groups Proxy</a>
+          <small class="text-white-50">
+            <span data-i18n="madeBy">Hecho con 🩵 por</span> <a href="https://www.linkedin.com/in/pfelipm/" target="_blank" class="text-white">Pablo Felip</a>
+          </small>
+        </div>
+        <button id="lang-switcher" class="btn btn-outline-light btn-sm">EN</button>
+      </div>
+    </nav>
+
+    <div class="container mt-4">
+      <div id="loader" class="text-center my-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden" data-i18n="loading">Cargando...</span>
+        </div>
+        <p class="mt-2" data-i18n="loading">Cargando...</p>
+      </div>
+
+      <div id="app-content">
+        <!-- Notificaciones -->
+        <div id="notification-area" style="min-height: 60px;"></div>
+        
+        <!-- Descripción de la App -->
+        <div class="alert alert-info" data-i18n="appDescription">
+            Esta aplicación te permite buscar tus clases de Classroom, ver sus participantes y crear grupos de Google con ellos de forma sencilla.
+        </div>
+
+        <!-- Sección de Cursos -->
+        <div class="card mb-4">
+          <div class="card-header" data-i18n="coursesSectionTitle">1. Cursos de Classroom</div>
+          <div class="card-body">
+             <div class="mb-3">
+                <label for="course-select" class="form-label" data-i18n="selectCourseLabel">Selecciona una clase</label>
+                <select id="course-select" class="form-select"></select>
+             </div>
+             <button id="export-courses-btn" class="btn btn-success">
+               <i class="bi bi-file-earmark-spreadsheet"></i> <span data-i18n="exportCoursesBtn">Exportar Lista de Cursos a CSV</span>
+             </button>
+          </div>
+        </div>
+
+        <!-- Sección de Emails Automáticos (oculta al inicio) -->
+        <div id="course-emails-section" class="card mb-4" style="display: none;">
+          <div class="card-header" data-i18n="courseEmailsSectionTitle">Grupos Automáticos de Classroom</div>
+          <div class="card-body">
+            <p class="form-text" data-i18n="courseEmailsDescription">Classroom crea automáticamente estas direcciones. Úsalas para compartir recursos en Drive o eventos de Calendar sin necesidad de crear un nuevo grupo.</p>
+            <div class="mb-2">
+              <strong data-i18n="teacherGroupEmailLabel">Email del grupo de profesores</strong>
+              <div class="input-group">
+                <span id="teacher-group-email" class="form-control bg-light" readonly></span>
+                <button class="btn btn-outline-secondary" type="button" id="copy-teacher-email-btn" data-i18n-title="copyBtnText" title="Copiar al portapapeles">
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
+            </div>
+            <div>
+              <strong data-i18n="courseGroupEmailLabel">Email del grupo de la clase (profesores y alumnos)</strong>
+              <div class="input-group">
+                <span id="course-group-email" class="form-control bg-light" readonly></span>
+                <button class="btn btn-outline-secondary" type="button" id="copy-course-email-btn" data-i18n-title="copyBtnText" title="Copiar al portapapeles">
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección de Usuarios (oculta al inicio) -->
+        <div id="users-section" class="card mb-4" style="display: none;">
+          <div class="card-header" data-i18n="usersSectionTitle">2. Usuarios de la Clase Seleccionada</div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <h5 data-i18n="teachersListTitle">Profesores</h5>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="select-all-teachers">
+                  <label class="form-check-label" for="select-all-teachers" data-i18n="selectAll">Seleccionar todos</label>
+                </div>
+                <div id="teachers-list" class="user-list border rounded p-2 mt-2"></div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <h5 data-i18n="studentsListTitle">Alumnos</h5>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="select-all-students">
+                  <label class="form-check-label" for="select-all-students" data-i18n="selectAll">Seleccionar todos</label>
+                </div>
+                <div id="students-list" class="user-list border rounded p-2 mt-2"></div>
+              </div>
+            </div>
+             <button id="export-users-btn" class="btn btn-success mt-2">
+               <i class="bi bi-file-earmark-spreadsheet"></i> <span data-i18n="exportUsersBtn">Exportar Usuarios de esta Clase a CSV</span>
+             </button>
+          </div>
+        </div>
+        
+        <!-- Sección de Creación de Grupo (oculta al inicio) -->
+        <div id="group-creation-section" class="card mb-4" style="display: none;">
+          <div class="card-header" data-i18n="groupCreationSectionTitle">3. Crear Grupo de Google</div>
+          <div class="card-body">
+            <p data-i18n="groupCreationDescription">Se creará un grupo con los usuarios seleccionados. El email del grupo se generará automáticamente.</p>
+            
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" role="switch" id="make-group-visible-check" checked>
+              <label class="form-check-label" for="make-group-visible-check" data-i18n="makeGroupVisibleLabel">Hacer visible en Google Grupos (con archivo de conversaciones)</label>
+            </div>
+
+            <button id="create-group-btn" class="btn btn-primary">
+              <i class="bi bi-people-fill"></i> <span data-i18n="createGroupBtn">Crear Grupo</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" xintegrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <!-- Incluir el JS de la aplicación -->
+    <?!= include('main'); ?>
+  </body>
+</html>
+
