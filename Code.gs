@@ -42,12 +42,13 @@ function obtenerInfoUsuario() {
 }
 
 /**
- * Obtiene la lista de cursos de Classroom en los que el usuario activo es profesor.
- * Se ejecuta en el contexto del usuario que visita la webapp.
+ * Obtiene la lista de cursos de Classroom en los que el usuario activo es profesor,
+ * ordenada alfabéticamente.
  * @returns {Array} Una lista de objetos, cada uno representando un curso.
  */
 function obtenerCursos() {
   try {
+    const locale = ss.getSpreadsheetLocale().split('_')[0]; // CORREGIDO: Asegura un tag de idioma válido.
     const courses = [];
     let pageToken;
     do {
@@ -88,25 +89,31 @@ function obtenerCursos() {
       pageToken = response.nextPageToken;
     } while (pageToken);
     
+    // Ordenar la lista de cursos por nombre, respetando el locale.
+    courses.sort((a, b) => a.name.localeCompare(b.name, locale));
+    
     _logOperation('Obtener Cursos', 'Éxito', `Se encontraron ${courses.length} cursos.`);
     return courses;
   } catch (error) {
     _logOperation('Obtener Cursos', 'Error', error.message);
-    // Se relanza el error original para que el frontend muestre el mensaje de la API
-    // precedido de su propio mensaje contextual localizado.
-    throw error;
+    throw new Error(JSON.stringify({ key: 'courseFetchError' }));
   }
 }
 
 /**
- * Obtiene los profesores y alumnos de un curso específico.
+ * Obtiene los profesores y alumnos de un curso específico, ordenados alfabéticamente.
  * @param {string} idCurso El ID del curso de Classroom.
  * @returns {object} Un objeto con dos arrays: 'teachers' y 'students'.
  */
 function obtenerUsuarios(idCurso) {
   try {
-    const teachers = Classroom.Courses.Teachers.list(idCurso).teachers || [];
-    const students = Classroom.Courses.Students.list(idCurso).students || [];
+    const locale = ss.getSpreadsheetLocale().split('_')[0]; // CORREGIDO: Asegura un tag de idioma válido.
+    const teachers = Classroom.Courses.Teachers.list(idCurso, {pageSize: 1000}).teachers || [];
+    const students = Classroom.Courses.Students.list(idCurso, {pageSize: 1000}).students || [];
+    
+    const sortByName = (a, b) => a.profile.name.fullName.localeCompare(b.profile.name.fullName, locale);
+    teachers.sort(sortByName);
+    students.sort(sortByName);
     
     const mapUser = user => ({
       id: user.userId,
@@ -121,10 +128,10 @@ function obtenerUsuarios(idCurso) {
     };
   } catch (error) {
     _logOperation('Obtener Usuarios', 'Error', `Curso: ${idCurso}. ${error.message}`);
-    // Se relanza el error original.
-    throw error;
+    throw new Error(JSON.stringify({ key: 'userFetchError' }));
   }
 }
+
 
 /**
  * Crea un grupo de Google y añade los miembros seleccionados.
@@ -184,14 +191,12 @@ function crearGrupoDeClase(datosGrupo) {
   } catch (error) {
     _logOperation('Crear Grupo', 'Error', `Clase: ${courseName}. ${error.message}`);
     if (error.message.includes('Group already exists')) {
-       // Se lanza un error estructurado para que el frontend pueda localizarlo.
        throw new Error(JSON.stringify({
          key: 'groupExistsError',
          params: { groupEmail: groupEmail }
        }));
     }
-    // Para otros errores, se relanza el error original.
-    throw error;
+    throw new Error(JSON.stringify({ key: 'groupCreateError' }));
   }
 }
 
