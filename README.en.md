@@ -21,23 +21,24 @@ The deployment of this tool is a process that must be carried out by a **Super A
 
 ### Deployment Steps
 
-1.  **Create a Google Sheet**: Create a new Google Sheet in your Drive. This sheet will serve as the container for the code and as a database to log operations and created groups.
-2.  **Open the Apps Script Editor**: Inside the spreadsheet, go to `Extensions > Apps Script`.
-3.  **Copy the Project Code**:
+1.  **Create a Google Sheet**: Create a new Google Sheet in your Drive.
+2.  **Prepare Log Sheets**: Rename the default sheet to `Registro de Operaciones` and create a second sheet named `Grupos Creados`. These sheets will be used to log the application's activity.
+3.  **Open the Apps Script Editor**: Inside the spreadsheet, go to `Extensions > Apps Script`.
+4.  **Copy the Project Code**:
     *   An Apps Script project will open with a `Code.gs` file. Delete its content and paste the content from the [`Code.gs`](Code.gs) file of this repository.
     *   Create the `appsscript.json` file in the editor and paste the content from the [`appsscript.json`](appsscript.json) file of this repository. This step is **crucial** for enabling the necessary APIs and permissions.
     *   Create a new HTML file named `index.html`. To do this, click the `+` icon next to `Files` and select `HTML`. Paste the content of the [`index.html`](index.html) file from this repository into it.
     *   Create another HTML file named `main.html` and paste the content of the [`main.html`](main.html) file from this repository into it.
-4.  **Save the Project**: Click the save icon (floppy disk).
-5.  **Deploy the Web Application**:
+5.  **Save the Project**: Click the save icon (floppy disk).
+6.  **Deploy the Web Application**:
     *   Click the `Deploy` button and select `New deployment`.
     *   In the configuration window, adjust the following settings:
         *   **Description**: Give it a descriptive name, like "Classroom Groups Proxy".
         *   **Execute as**: `Me` (the email of the administrator performing the deployment).
         *   **Who has access**: `Anyone within [Your Domain]`.
     *   Click `Deploy`.
-6.  **Authorize Permissions**: The first time you deploy, Google will ask you to authorize the permissions (OAuth scopes) that the script needs to function. Review and accept the permissions.
-7.  **Get and Share the URL**: Once deployed, you will be provided with a web app URL. This is the URL you should share with teachers and other users in your domain so they can use the tool.
+7.  **Authorize Permissions**: The first time you deploy, Google will ask you to authorize the permissions (OAuth scopes) that the script needs to function. Review and accept the permissions.
+8.  **Get and Share the URL**: Once deployed, you will be provided with a web app URL. This is the URL you should share with teachers and other users in your domain so they can use the tool.
 
 ## 3. Detailed Features
 
@@ -68,7 +69,7 @@ The application's interface guides the user through a simple three-step process.
 ### Other Features
 
 *   **CSV Export**: At each step, there are buttons to export the list of courses or the list of users from the selected course to a CSV file.
-*   **Activity Logging**: The spreadsheet hosting the script automatically creates two tabs:
+*   **Activity Logging**: The spreadsheet hosting the script uses two tabs for activity logging. If these sheets do not exist, the script will create them on its first run:
     *   `Registro de Operaciones` (Operation Log): Saves a line for each action performed (loading courses, creating a group, errors, etc.), indicating who did it and when.
     *   `Grupos Creados` (Created Groups): Keeps a record of all groups that have been created with the tool.
 *   **Internationalization (i18n)**: The interface is available in Spanish and English and automatically switches based on the user's browser language.

@@ -21,23 +21,24 @@ El despliegue de esta herramienta es un proceso que debe realizar un **Super Adm
 
 ### Pasos para el Despliegue
 
-1.  **Crear una Hoja de Cálculo de Google**: Crea una nueva Google Sheet en tu Drive. Esta hoja servirá como contenedor para el código y como base de datos para registrar las operaciones y los grupos creados.
-2.  **Abrir el Editor de Apps Script**: Dentro de la hoja de cálculo, ve a `Extensiones > Apps Script`.
-3.  **Copiar el Código del Proyecto**:
+1.  **Crear una Hoja de Cálculo de Google**: Crea una nueva Google Sheet en tu Drive.
+2.  **Preparar las Pestañas de Registro**: Renombra la pestaña por defecto a `Registro de Operaciones` y crea una segunda pestaña llamada `Grupos Creados`. Estas hojas servirán para registrar la actividad de la aplicación.
+3.  **Abrir el Editor de Apps Script**: Dentro de la hoja de cálculo, ve a `Extensiones > Apps Script`.
+4.  **Copiar el Código del Proyecto**:
     *   Se abrirá un proyecto de Apps Script con un fichero `Código.gs`. Borra su contenido y pega el contenido del fichero [`Code.gs`](Code.gs) de este repositorio.
     *   Crea el fichero `appsscript.json` en el editor y pega el contenido del fichero [`appsscript.json`](appsscript.json) de este repositorio. Este paso es **crucial** para que se activen las APIs y permisos necesarios.
     *   Crea un nuevo fichero HTML llamado `index.html`. Para ello, haz clic en el `+` junto a `Archivos` y selecciona `HTML`. Pega en él el contenido del fichero [`index.html`](index.html) de este repositorio.
     *   Crea otro fichero HTML llamado `main.html` y pega en él el contenido del fichero [`main.html`](main.html) de este repositorio.
-4.  **Guardar el Proyecto**: Haz clic en el icono de guardar (disquete).
-5.  **Desplegar la Aplicación Web**:
+5.  **Guardar el Proyecto**: Haz clic en el icono de guardar (disquete).
+6.  **Desplegar la Aplicación Web**:
     *   Haz clic en el botón `Desplegar` y selecciona `Nuevo despliegue`.
     *   En la ventana de configuración, ajusta las siguientes opciones:
         *   **Descripción**: Dale un nombre descriptivo, como "Classroom Groups Proxy".
         *   **Ejecutar como**: `Yo` (el correo del administrador que está realizando el despliegue).
         *   **Quién tiene acceso**: `Cualquier usuario del dominio [Tu Dominio]`.
     *   Haz clic en `Desplegar`.
-6.  **Autorizar los Permisos**: La primera vez que despliegues, Google te pedirá que autorices los permisos (scopes de OAuth) que el script necesita para funcionar. Revisa y acepta los permisos.
-7.  **Obtener y Compartir la URL**: Una vez desplegada, se te proporcionará una URL de la aplicación web. Esta es la URL que debes compartir con los profesores y otros usuarios de tu dominio para que puedan utilizar la herramienta.
+7.  **Autorizar los Permisos**: La primera vez que despliegues, Google te pedirá que autorices los permisos (scopes de OAuth) que el script necesita para funcionar. Revisa y acepta los permisos.
+8.  **Obtener y Compartir la URL**: Una vez desplegada, se te proporcionará una URL de la aplicación web. Esta es la URL que debes compartir con los profesores y otros usuarios de tu dominio para que puedan utilizar la herramienta.
 
 ## 3. Funcionalidades Detalladas
 
@@ -68,7 +69,7 @@ La interfaz de la aplicación guía al usuario a través de un proceso sencillo 
 ### Otras Funcionalidades
 
 *   **Exportación a CSV**: En cada paso, hay botones para exportar la lista de cursos o la lista de usuarios del curso seleccionado a un fichero CSV.
-*   **Registro de Actividad**: La hoja de cálculo que aloja el script crea automáticamente dos pestañas:
+*   **Registro de Actividad**: La hoja de cálculo que aloja el script utiliza dos pestañas para el registro de actividad. Si estas no existen, el código las creará en la primera ejecución:
     *   `Registro de Operaciones`: Guarda una línea por cada acción realizada (carga de cursos, creación de grupo, errores, etc.), indicando quién la hizo y cuándo.
     *   `Grupos Creados`: Mantiene un registro de todos los grupos que se han creado con la herramienta.
 *   **Internacionalización (i18n)**: La interfaz está disponible en español e inglés y cambia automáticamente según el idioma del navegador del usuario.
