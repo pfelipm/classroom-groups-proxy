@@ -315,6 +315,11 @@ function exportarUsuariosCsv(idCurso) {
  * @private
  */
 function _logOperation(action, status, details) {
+  // --- INICIO DE LA MODIFICACIÓN ---
+  if (logSheet.getLastRow() === 0) {
+    logSheet.appendRow(['Fecha', 'Usuario', 'Acción', 'Resultado', 'Información adicional']);
+  }
+  // --- FIN DE LA MODIFICACIÓN ---
   logSheet.appendRow([new Date(), Session.getActiveUser().getEmail(), action, status, details]);
 }
 
