@@ -48,7 +48,7 @@ function obtenerInfoUsuario() {
  */
 function obtenerCursos() {
   try {
-    const locale = ss.getSpreadsheetLocale().split('_')[0]; // CORREGIDO: Asegura un tag de idioma válido.
+    const locale = ss.getSpreadsheetLocale().split('_')[0];
     const courses = [];
     let pageToken;
     do {
@@ -89,7 +89,6 @@ function obtenerCursos() {
       pageToken = response.nextPageToken;
     } while (pageToken);
     
-    // Ordenar la lista de cursos por nombre, respetando el locale.
     courses.sort((a, b) => a.name.localeCompare(b.name, locale));
     
     _logOperation('Obtener Cursos', 'Éxito', `Se encontraron ${courses.length} cursos.`);
@@ -107,7 +106,7 @@ function obtenerCursos() {
  */
 function obtenerUsuarios(idCurso) {
   try {
-    const locale = ss.getSpreadsheetLocale().split('_')[0]; // CORREGIDO: Asegura un tag de idioma válido.
+    const locale = ss.getSpreadsheetLocale().split('_')[0];
     const teachers = Classroom.Courses.Teachers.list(idCurso, {pageSize: 1000}).teachers || [];
     const students = Classroom.Courses.Students.list(idCurso, {pageSize: 1000}).students || [];
     
@@ -120,8 +119,8 @@ function obtenerUsuarios(idCurso) {
       name: user.profile.name.fullName,
       email: user.profile.emailAddress
     });
-
-    _logOperation('Obtener Usuarios', 'Éxito', `Curso: ${idCurso}. Profesores: ${teachers.length}, Alumnos: ${students.length}.`);
+    
+    _logOperation('Obtener Usuarios', 'Éxito', `Curso: ${idCurso}. Profesorado: ${teachers.length}, Alumnado: ${students.length}.`);
     return {
       teachers: teachers.map(mapUser),
       students: students.map(mapUser)
@@ -132,7 +131,6 @@ function obtenerUsuarios(idCurso) {
   }
 }
 
-
 /**
  * Crea un grupo de Google y añade los miembros seleccionados.
  * Se ejecuta con los permisos del administrador que desplegó la app.
@@ -140,12 +138,17 @@ function obtenerUsuarios(idCurso) {
  * @returns {object} Un objeto con el resultado de la operación.
  */
 function crearGrupoDeClase(datosGrupo) {
-  const { courseId, courseName, members, ownerEmail, domain, makeVisible } = datosGrupo;
+  const { courseId, courseName, members, ownerEmail, domain, makeVisible, makeTeachersManagers, allTeacherEmails } = datosGrupo;
   
   const cleanName = courseName.toLowerCase().replace(/[^a-z0-9]/g, '-');
-  const groupId = `cgp-${cleanName}-${courseId.slice(0, 5)}`;
+  const truncatedCleanName = cleanName.slice(0, 30);
+  const groupId = `cgp-${truncatedCleanName}-${courseId}`;
   const groupEmail = `${groupId}@${domain}`;
   const groupName = `CGP - ${courseName}`;
+
+  const memberSet = new Set(members);
+  memberSet.add(ownerEmail);
+  const finalMembers = Array.from(memberSet);
 
   try {
     // 1. Crear el grupo de directorio
@@ -155,47 +158,93 @@ function crearGrupoDeClase(datosGrupo) {
       description: `Grupo para la clase de Classroom '${courseName}' (ID: ${courseId}). Creado por ${ownerEmail}.`
     });
 
-    Utilities.sleep(2000);
+    // --- INICIO DE LA MODIFICACIÓN: Lógica de Binary Exponential Backoff ---
+    let intentos = 0;
+    let grupoVerificado = false;
+    const MAX_INTENTOS = 5;
 
-    // 2. Añadir miembros
-    members.forEach(memberEmail => {
-      const role = (memberEmail === ownerEmail) ? 'OWNER' : 'MEMBER';
+    // Bucle para verificar que el grupo existe, con un máximo de 5 intentos.
+    while (intentos < MAX_INTENTOS && !grupoVerificado) {
       try {
-        AdminDirectory.Members.insert({
-          email: memberEmail,
-          role: role
-        }, newGroup.id);
-      } catch(e) {
-        console.warn(`No se pudo añadir al miembro ${memberEmail}: ${e.message}`);
+        // Se intenta obtener el grupo para confirmar que se ha propagado.
+        AdminDirectory.Groups.get(newGroup.email);
+        grupoVerificado = true; // Si no hay error, el grupo existe y podemos continuar.
+      } catch (e) {
+        // Si hay error, el grupo aún no está disponible.
+        intentos++;
+        if (intentos < MAX_INTENTOS) {
+          // Se calcula el tiempo de espera: 2^intentos segundos + hasta 1 segundo aleatorio (jitter).
+          const tiempoEspera = Math.pow(2, intentos) * 1000 + Math.floor(Math.random() * 1000);
+          console.log(`Intento ${intentos} de verificación fallido. Reintentando en ${tiempoEspera} ms...`);
+          Utilities.sleep(tiempoEspera);
+        }
       }
-    });
-
-    // 3. Activar el grupo en la interfaz de Google Grupos, si se ha solicitado
-    if (makeVisible) {
-      const groupSettings = {
-        whoCanJoin: 'INVITED_CAN_JOIN',
-        whoCanViewGroup: 'ALL_MEMBERS_CAN_VIEW',
-        whoCanPostMessage: 'ALL_MEMBERS_CAN_POST',
-        allowWebPosting: true,
-        isArchived: false,
-        showMessageInGoogleGroups: true
-      };
-      GroupsSettings.Groups.patch(groupSettings, newGroup.email);
     }
 
+    // Si tras los 5 intentos el grupo no se ha verificado, lanzar un error.
+    if (!grupoVerificado) {
+      throw new Error('No se pudo confirmar la creación del grupo tras varios intentos.');
+    }
+    
+    // --- FIN DE LA MODIFICACIÓN ---
+
+
+    // 2. Añadir miembros (solo si el grupo ha sido verificado)
+    finalMembers.forEach(memberEmail => {
+      let role = 'MEMBER'; // Rol por defecto
+      if (memberEmail === ownerEmail) {
+        role = 'OWNER';
+      } else if (makeTeachersManagers && allTeacherEmails.includes(memberEmail)) {
+        role = 'MANAGER';
+      }
+      
+      AdminDirectory.Members.insert({
+        email: memberEmail,
+        role: role
+      }, newGroup.id);
+    });
+
+    // 3. Establecer los ajustes del grupo.
+    const groupSettings = {
+      whoCanJoin: 'INVITED_CAN_JOIN',
+      isArchived: true, // Si true se guardan los mensajes enviados
+      allowWebPosting: true,
+      whoCanDiscoverGroup: 'ALL_IN_DOMAIN_CAN_DISCOVER', // Si "ALL_MEMBERS_CAN_DISCOVER" a menudo error "WHO_CAN_VIEW_MEMBERSHIP_CANNOT_BE_BROADER_THAN_WHO_CAN_SEE_GROUP"
+      whoCanPostMessage: 'ALL_MANAGERS_CAN_POST', // Añadir check para ALL_MEMBERS_CAN_POST
+      whoCanViewGroup: 'ALL_MEMBERS_CAN_VIEW',
+      whoCanViewMembership: 'ALL_MEMBERS_CAN_VIEW', // El ajuste "Quién puede ver las direcciones de email de los miembros" no parece estar expuesto, por defecto "ALL_IN_DOMAIN (con estos ajustes)
+      whoCanContactOwner: 'ALL_MEMBERS_CAN_CONTACT',
+      archiveOnly: false,
+    };
+    AdminGroupsSettings.Groups.patch(groupSettings, newGroup.email);
+
     _logOperation('Crear Grupo', 'Éxito', `Grupo ${groupEmail} creado. Visible en Grupos: ${makeVisible}.`);
-    _logGroupCreation(newGroup.id, groupName, groupEmail, courseId, courseName, ownerEmail, members.length);
+    _logGroupCreation(newGroup.id, groupName, groupEmail, courseId, courseName, ownerEmail, finalMembers.length);
     
     return { success: true, message: `Grupo ${groupEmail} creado con éxito.`, groupEmail: groupEmail };
 
   } catch (error) {
+    console.error(`Error original capturado en crearGrupoDeClase: ${error.stack}`);
     _logOperation('Crear Grupo', 'Error', `Clase: ${courseName}. ${error.message}`);
-    if (error.message.includes('Group already exists')) {
+    
+    const errorMessage = error.message || '';
+
+    if (errorMessage.includes('Entity already exists.')) {
        throw new Error(JSON.stringify({
          key: 'groupExistsError',
          params: { groupEmail: groupEmail }
        }));
     }
+    
+    if (errorMessage.includes('Resource Not Found')) {
+      if (error.stack.includes('Groups.insert')) {
+         throw new Error(JSON.stringify({ key: 'groupInsertPermissionError' }));
+      } else {
+         throw new Error(JSON.stringify({ key: 'memberNotFoundError' }));
+      }
+    }
+
+    // El error lanzado por el bucle de reintento será capturado aquí y devuelto al frontend.
     throw new Error(JSON.stringify({ key: 'groupCreateError' }));
   }
 }
@@ -239,7 +288,7 @@ function exportarUsuariosCsv(idCurso) {
   teachers.forEach(t => addUserToCsv(t, 'Teacher'));
   students.forEach(s => addUserToCsv(s, 'Student'));
   
-  _logOperation('Exportar Usuarios', 'Éxito', `Curso ${idCurso}. Exportados ${teachers.length} profes y ${students.length} alumnos.`);
+  _logOperation('Exportar Usuarios', 'Éxito', `Curso ${idCurso}. Exportados ${teachers.length} miembros del profesorado y ${students.length} del alumnado.`);
   return csvRows.join('\n');
 }
 

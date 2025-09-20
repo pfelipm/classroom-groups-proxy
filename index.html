@@ -62,7 +62,7 @@
           <div class="card-body">
             <p class="form-text" data-i18n="courseEmailsDescription">Classroom crea automáticamente estas direcciones. Úsalas para compartir recursos en Drive o eventos de Calendar sin necesidad de crear un nuevo grupo.</p>
             <div class="mb-2">
-              <strong data-i18n="teacherGroupEmailLabel">Email del grupo de profesores</strong>
+              <strong data-i18n="teacherGroupEmailLabel">Email del grupo de profesorado</strong>
               <div class="input-group">
                 <span id="teacher-group-email" class="form-control bg-light" readonly></span>
                 <button class="btn btn-outline-secondary" type="button" id="copy-teacher-email-btn" data-i18n-title="copyBtnText" title="Copiar al portapapeles">
@@ -71,7 +71,7 @@
               </div>
             </div>
             <div>
-              <strong data-i18n="courseGroupEmailLabel">Email del grupo de la clase (profesores y alumnos)</strong>
+              <strong data-i18n="courseGroupEmailLabel">Email del grupo de la clase (profesorado y alumnado)</strong>
               <div class="input-group">
                 <span id="course-group-email" class="form-control bg-light" readonly></span>
                 <button class="btn btn-outline-secondary" type="button" id="copy-course-email-btn" data-i18n-title="copyBtnText" title="Copiar al portapapeles">
@@ -88,7 +88,7 @@
           <div class="card-body">
             <div class="row">
               <div class="col-md-6 mb-3">
-                <h5 data-i18n="teachersListTitle">Profesores</h5>
+                <h5 data-i18n="teachersListTitle">Profesorado</h5>
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" id="select-all-teachers">
                   <label class="form-check-label" for="select-all-teachers" data-i18n="selectAll">Seleccionar todos</label>
@@ -96,7 +96,7 @@
                 <div id="teachers-list" class="user-list border rounded p-2 mt-2"></div>
               </div>
               <div class="col-md-6 mb-3">
-                <h5 data-i18n="studentsListTitle">Alumnos</h5>
+                <h5 data-i18n="studentsListTitle">Alumnado</h5>
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" id="select-all-students">
                   <label class="form-check-label" for="select-all-students" data-i18n="selectAll">Seleccionar todos</label>
@@ -121,12 +121,35 @@
               <label class="form-check-label" for="make-group-visible-check" data-i18n="makeGroupVisibleLabel">Hacer visible en Google Grupos (con archivo de conversaciones)</label>
             </div>
 
+            <!-- INICIO DE LA MODIFICACIÓN: Nuevo check para rol de profesor -->
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" role="switch" id="make-teachers-managers-check" checked>
+              <label class="form-check-label" for="make-teachers-managers-check" data-i18n="makeTeachersManagersLabel">Hacer administradores a los miembros del profesorado</label>
+            </div>
+            <!-- FIN DE LA MODIFICACIÓN -->
+
             <button id="create-group-btn" class="btn btn-primary">
               <i class="bi bi-people-fill"></i> <span data-i18n="createGroupBtn">Crear Grupo</span>
             </button>
           </div>
         </div>
 
+      </div>
+    </div>
+    
+    <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="notificationModalLabel"></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="notificationModalBody">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="closeBtn">Cerrar</button>
+          </div>
+        </div>
       </div>
     </div>
 

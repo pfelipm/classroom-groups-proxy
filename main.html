@@ -2,8 +2,9 @@
 document.addEventListener('DOMContentLoaded', function() {
   
   // --- VARIABLES Y ELEMENTOS DEL DOM ---
-  let currentLang = 'es';
+  let currentLang;
   let userInfo = {};
+  let courseTeachers = [];
   const elements = {
     loader: document.getElementById('loader'),
     appContent: document.getElementById('app-content'),
@@ -20,11 +21,15 @@ document.addEventListener('DOMContentLoaded', function() {
     groupCreationSection: document.getElementById('group-creation-section'),
     createGroupBtn: document.getElementById('create-group-btn'),
     makeGroupVisibleCheck: document.getElementById('make-group-visible-check'),
+    makeTeachersManagersCheck: document.getElementById('make-teachers-managers-check'),
     courseEmailsSection: document.getElementById('course-emails-section'),
     teacherGroupEmailSpan: document.getElementById('teacher-group-email'),
     courseGroupEmailSpan: document.getElementById('course-group-email'),
     copyTeacherEmailBtn: document.getElementById('copy-teacher-email-btn'),
-    copyCourseEmailBtn: document.getElementById('copy-course-email-btn')
+    copyCourseEmailBtn: document.getElementById('copy-course-email-btn'),
+    notificationModal: new bootstrap.Modal(document.getElementById('notificationModal')),
+    notificationModalLabel: document.getElementById('notificationModalLabel'),
+    notificationModalBody: document.getElementById('notificationModalBody')
   };
 
   // --- DICCIONARIO DE TRADUCCIONES (i18n) ---
@@ -39,31 +44,37 @@ document.addEventListener('DOMContentLoaded', function() {
       selectCourseDefault: "--- Por favor, selecciona una clase ---",
       exportCoursesBtn: "Exportar Lista de Cursos a CSV",
       courseEmailsSectionTitle: "Grupos Automáticos de Classroom",
-      teacherGroupEmailLabel: "Email del grupo de profesores",
-      courseGroupEmailLabel: "Email del grupo de la clase (profesores y alumnos)",
+      teacherGroupEmailLabel: "Email del grupo de profesorado",
+      courseGroupEmailLabel: "Email del grupo de la clase (profesorado y alumnado)",
       copyBtnText: "Copiar al portapapeles",
       copySuccessText: "¡Copiado!",
       courseEmailsDescription: "Classroom crea automáticamente estas direcciones. Úsalas para compartir recursos en Drive o eventos de Calendar sin necesidad de crear un nuevo grupo.",
       usersSectionTitle: "2. Usuarios de la Clase Seleccionada",
-      teachersListTitle: "Profesores",
-      studentsListTitle: "Alumnos",
+      teachersListTitle: "Profesorado",
+      studentsListTitle: "Alumnado",
       selectAll: "Seleccionar todos",
       exportUsersBtn: "Exportar Usuarios de esta Clase a CSV",
       groupCreationSectionTitle: "3. Crear Grupo de Google",
       groupCreationDescription: "Se creará un grupo con los usuarios seleccionados. El email del grupo se generará automáticamente.",
       createGroupBtn: "Crear Grupo",
       makeGroupVisibleLabel: "Hacer visible en Google Grupos (con archivo de conversaciones)",
+      makeTeachersManagersLabel: "Hacer administradores a los miembros del profesorado",
       errorTitle: "Error",
       warningTitle: "Aviso",
       successTitle: "Éxito",
       noCoursesFound: "No se encontraron clases en las que seas profesor.",
       courseFetchError: "Ocurrió un error al cargar tus clases.",
       userFetchError: "Ocurrió un error al cargar los usuarios de la clase.",
+      userFetchFatalError: "Error fatal al obtener información del usuario",
       groupCreateSuccess: "¡Grupo creado con éxito!",
       groupCreateError: "Ocurrió un error al crear el grupo.",
       groupExistsError: "El grupo con email {{groupEmail}} ya existe.",
+      memberNotFoundError: "No se pudo crear el grupo porque uno de los miembros seleccionados no existe. Revisa la lista de participantes del curso en Classroom.",
+      groupInsertPermissionError: "No se pudo crear el grupo. La cuenta que desplegó esta aplicación no tiene permisos de administrador para crear grupos en el dominio. Por favor, contacta con el administrador de TI de tu organización.",
       exportError: "No hay datos para exportar.",
-      noUsersSelected: "Por favor, selecciona al menos un usuario para crear el grupo.",
+      groupWithOnlyOwnerError: "¿En serio quieres crear un grupo para ti solo? Eso no tiene mucho sentido 🙃. Por favor, selecciona más miembros y vuelve a intentarlo.",
+      ownerIsAddedNote: "Nota: El usuario que crea el grupo (tú) será añadido siempre como propietario.",
+      closeBtn: "Cerrar"
     },
     en: {
       appTitle: "Classroom Groups Proxy",
@@ -89,17 +100,23 @@ document.addEventListener('DOMContentLoaded', function() {
       groupCreationDescription: "A group will be created with the selected users. The group email will be generated automatically.",
       createGroupBtn: "Create Group",
       makeGroupVisibleLabel: "Make visible in Google Groups (with conversation archive)",
+      makeTeachersManagersLabel: "Make teachers group managers",
       errorTitle: "Error",
       warningTitle: "Warning",
       successTitle: "Success",
       noCoursesFound: "No courses found where you are a teacher.",
       courseFetchError: "An error occurred while loading your courses.",
       userFetchError: "An error occurred while loading users for the class.",
+      userFetchFatalError: "Fatal error while fetching user information",
       groupCreateSuccess: "Group created successfully!",
       groupCreateError: "An error occurred while creating the group.",
       groupExistsError: "The group with email {{groupEmail}} already exists.",
+      memberNotFoundError: "Could not create group because one of the selected members does not exist. Please check the participant list in the Classroom course.",
+      groupInsertPermissionError: "Could not create group. The account that deployed this application does not have administrator permissions to create groups in the domain. Please contact your organization's IT administrator.",
       exportError: "There is no data to export.",
-      noUsersSelected: "Please select at least one user to create the group.",
+      groupWithOnlyOwnerError: "Really want to create a group for just yourself? That doesn't make much sense 🙃. Please select more members and try again.",
+      ownerIsAddedNote: "Note: The user creating the group (you) will always be added as an owner.",
+      closeBtn: "Close"
     }
   };
 
@@ -111,17 +128,23 @@ document.addEventListener('DOMContentLoaded', function() {
     elements.appContent.style.display = show ? 'none' : 'block';
   };
   
-  /** Muestra una notificación (alerta de Bootstrap) */
-  const showNotification = (message, type = 'warning') => {
+  /** * Muestra una notificación (alerta de Bootstrap) 
+   * @param {string} message El mensaje principal a mostrar.
+   * @param {string} type El tipo de alerta (success, warning, danger).
+   * @param {string|null} emailToCopy Si se proporciona un email, se añade un botón para copiarlo.
+   */
+  const showNotification = (message, type = 'warning', emailToCopy = null) => {
     let title = '';
     let alertClass = '';
+    let copyButtonId;
+
     switch(type) {
         case 'success':
             title = translations[currentLang].successTitle;
             alertClass = 'alert-success';
             break;
         case 'warning':
-        case 'danger': // Errores y avisos usarán el mismo color naranja
+        case 'danger':
             title = (type === 'danger') ? translations[currentLang].errorTitle : translations[currentLang].warningTitle;
             alertClass = 'alert-warning';
             break;
@@ -129,19 +152,48 @@ document.addEventListener('DOMContentLoaded', function() {
             title = translations[currentLang].warningTitle;
             alertClass = 'alert-warning';
     }
+
+    let content = `<strong>${title}:</strong> ${message}`;
+    
+    if (emailToCopy) {
+      copyButtonId = `copy-btn-${Date.now()}`;
+      content += `
+        <div class="input-group mt-2">
+          <span class="form-control bg-light" readonly>${emailToCopy}</span>
+          <button class="btn btn-outline-secondary" type="button" id="${copyButtonId}" title="${translations[currentLang].copyBtnText}">
+            <i class="bi bi-clipboard"></i>
+          </button>
+        </div>`;
+    }
+
     const alertHtml = `
       <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
-        <strong>${title}:</strong> ${message}
+        ${content}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>`;
+    
     elements.notificationArea.innerHTML = alertHtml;
+
+    if (emailToCopy) {
+        const newCopyButton = document.querySelector(`#${copyButtonId}`);
+        if(newCopyButton) {
+            newCopyButton.addEventListener('click', (e) => {
+                copyToClipboard(emailToCopy, e.currentTarget);
+            });
+        }
+    }
+  };
+
+  /** Muestra una notificación en un modal de Bootstrap */
+  const showModalNotification = (title, message) => {
+    elements.notificationModalLabel.textContent = title;
+    elements.notificationModalBody.textContent = message;
+    elements.notificationModal.show();
   };
 
   /** Cambia el idioma de la interfaz */
   const setLanguage = (lang) => {
-    // Borra cualquier notificación anterior para evitar inconsistencias de idioma.
     elements.notificationArea.innerHTML = '';
-    
     currentLang = lang;
     elements.langSwitcher.textContent = lang === 'es' ? 'EN' : 'ES';
     
@@ -226,16 +278,38 @@ document.addEventListener('DOMContentLoaded', function() {
   
   /** Rellena las listas de usuarios (profesores y alumnos) */
   const populateUsers = (data) => {
-    const createUserCheckbox = (user) => `
-      <div class="form-check">
-        <input class="form-check-input user-checkbox" type="checkbox" value="${user.email}" id="user-${user.id}">
-        <label class="form-check-label" for="user-${user.id}">${user.name} (${user.email})</label>
-      </div>`;
+    courseTeachers = data.teachers.map(t => t.email);
 
-    elements.teachersList.innerHTML = data.teachers.map(createUserCheckbox).join('');
-    elements.studentsList.innerHTML = data.students.map(createUserCheckbox).join('');
-    elements.selectAllTeachers.checked = false;
-    elements.selectAllStudents.checked = false;
+    const usersCardBody = elements.usersSection.querySelector('.card-body');
+    if (usersCardBody && !usersCardBody.querySelector('.owner-note')) {
+        const note = document.createElement('p');
+        note.className = 'form-text text-muted fst-italic owner-note';
+        note.setAttribute('data-i18n', 'ownerIsAddedNote');
+        note.textContent = translations[currentLang].ownerIsAddedNote;
+        usersCardBody.insertBefore(note, usersCardBody.firstChild);
+    }
+
+    const createUserCheckbox = (user, isSelectedByDefault) => {
+      const isOwner = user.email === userInfo.email;
+      let attributes = '';
+      if (isOwner) {
+        attributes = 'checked disabled';
+      } else if (isSelectedByDefault) {
+        attributes = 'checked';
+      }
+      return `
+        <div class="form-check">
+          <input class="form-check-input user-checkbox" type="checkbox" value="${user.email}" id="user-${user.id}" ${attributes}>
+          <label class="form-check-label" for="user-${user.id}">${user.name} (${user.email})</label>
+        </div>`;
+    };
+
+    elements.teachersList.innerHTML = data.teachers.map(user => createUserCheckbox(user, true)).join('');
+    elements.studentsList.innerHTML = data.students.map(user => createUserCheckbox(user, true)).join('');
+    
+    elements.selectAllTeachers.checked = true;
+    elements.selectAllStudents.checked = true;
+
     elements.usersSection.style.display = 'block';
     elements.groupCreationSection.style.display = 'block';
     showLoader(false);
@@ -244,8 +318,25 @@ document.addEventListener('DOMContentLoaded', function() {
   /** Gestiona la selección/deselección de todos los checkboxes en una lista */
   const handleSelectAll = (masterCheckbox, listContainer) => {
     const checkboxes = listContainer.querySelectorAll('.user-checkbox');
-    checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
+    checkboxes.forEach(cb => {
+      if (!cb.disabled) {
+        cb.checked = masterCheckbox.checked
+      }
+    });
   };
+
+  // --- INICIO DE LA MODIFICACIÓN: Nueva función ---
+  /** Actualiza el estado del checkbox "Seleccionar todos" basado en las selecciones individuales */
+  const updateSelectAllStatus = (listContainer, masterCheckbox) => {
+    const checkboxes = listContainer.querySelectorAll('.user-checkbox:not(:disabled)');
+    if (checkboxes.length === 0) {
+      masterCheckbox.checked = false;
+      return;
+    }
+    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+    masterCheckbox.checked = allChecked;
+  };
+  // --- FIN DE LA MODIFICACIÓN ---
 
   // --- EVENT LISTENERS ---
 
@@ -322,54 +413,81 @@ document.addEventListener('DOMContentLoaded', function() {
   elements.selectAllTeachers.addEventListener('change', () => handleSelectAll(elements.selectAllTeachers, elements.teachersList));
   elements.selectAllStudents.addEventListener('change', () => handleSelectAll(elements.selectAllStudents, elements.studentsList));
 
+  // --- INICIO DE LA MODIFICACIÓN: Nuevos listeners ---
+  elements.teachersList.addEventListener('change', (e) => {
+    if (e.target.classList.contains('user-checkbox')) {
+      updateSelectAllStatus(elements.teachersList, elements.selectAllTeachers);
+    }
+  });
+
+  elements.studentsList.addEventListener('change', (e) => {
+    if (e.target.classList.contains('user-checkbox')) {
+      updateSelectAllStatus(elements.studentsList, elements.selectAllStudents);
+    }
+  });
+  // --- FIN DE LA MODIFICACIÓN ---
+
   elements.createGroupBtn.addEventListener('click', () => {
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    
+    if (selectedCheckboxes.length <= 1) {
+      showModalNotification(
+        translations[currentLang].warningTitle,
+        translations[currentLang].groupWithOnlyOwnerError
+      );
+      return;
+    }
+
     const courseId = elements.courseSelect.value;
     const selectedOption = elements.courseSelect.options[elements.courseSelect.selectedIndex];
     const courseName = selectedOption.dataset.courseName;
 
-    const selectedUsers = Array.from(document.querySelectorAll('.user-checkbox:checked')).map(cb => cb.value);
-
-    if (selectedUsers.length === 0) {
-      showNotification(translations[currentLang].noUsersSelected, 'warning');
-      return;
-    }
+    const selectedUsers = Array.from(selectedCheckboxes).map(cb => cb.value);
     
     showLoader(true);
+    
     const groupData = {
       courseId: courseId,
       courseName: courseName,
       members: selectedUsers,
       ownerEmail: userInfo.email,
       domain: userInfo.domain,
-      makeVisible: elements.makeGroupVisibleCheck.checked
+      makeVisible: elements.makeGroupVisibleCheck.checked,
+      makeTeachersManagers: elements.makeTeachersManagersCheck.checked,
+      allTeacherEmails: courseTeachers
     };
 
     google.script.run
       .withSuccessHandler(response => {
         showLoader(false);
         if (response.success) {
-          showNotification(`${translations[currentLang].groupCreateSuccess} Email: ${response.groupEmail}`, 'success');
+          showNotification(translations[currentLang].groupCreateSuccess, 'success', response.groupEmail);
         } else {
           showNotification(response.message || translations[currentLang].groupCreateError, 'danger');
         }
       })
       .withFailureHandler(err => {
         showLoader(false);
-        let finalMessage = '';
+        let finalMessage = translations[currentLang].groupCreateError;
         try {
-            const errorObj = JSON.parse(err.message);
+          const jsonMatch = err.message.match(/\{.*\}/);
+          if (jsonMatch) {
+            const errorObj = JSON.parse(jsonMatch[0]);
             if (errorObj.key && translations[currentLang][errorObj.key]) {
-                finalMessage = translations[currentLang][errorObj.key];
-                if (errorObj.params) {
-                    for (const [key, value] of Object.entries(errorObj.params)) {
-                        finalMessage = finalMessage.replace(`{{${key}}}`, value);
-                    }
+              finalMessage = translations[currentLang][errorObj.key];
+              if (errorObj.params) {
+                for (const [paramKey, paramValue] of Object.entries(errorObj.params)) {
+                  finalMessage = finalMessage.replace(`{{${paramKey}}}`, paramValue);
                 }
+              }
             } else {
-                finalMessage = err.message;
+               finalMessage += `: ${err.message}`;
             }
+          } else {
+             finalMessage += `: ${err.message}`;
+          }
         } catch (e) {
-            finalMessage = `${translations[currentLang].groupCreateError}: ${err.message}`;
+           finalMessage += `: ${err.message}`;
         }
         showNotification(finalMessage, 'danger');
       })
@@ -379,7 +497,10 @@ document.addEventListener('DOMContentLoaded', function() {
   // --- INICIALIZACIÓN ---
   const initialize = () => {
     showLoader(true);
-    setLanguage('es');
+
+    const userLang = navigator.language || navigator.userLanguage; 
+    const defaultLang = userLang.startsWith('es') ? 'es' : 'en';
+    setLanguage(defaultLang);
     
     google.script.run
       .withSuccessHandler(info => {
@@ -393,7 +514,7 @@ document.addEventListener('DOMContentLoaded', function() {
           .obtenerCursos();
       })
       .withFailureHandler(err => {
-        showNotification(`Error fatal al obtener información del usuario: ${err.message}`, 'danger');
+        showNotification(`${translations[currentLang].userFetchFatalError}: ${err.message}`, 'danger');
         showLoader(false);
       })
       .obtenerInfoUsuario();
