@@ -4,11 +4,11 @@
 
 ## 1. Qué es y para qué sirve
 
-**Classroom Groups Proxy** es una aplicación web desarrollada en Google Apps Script que sirve como un puente entre Google Classroom y Google Groups. Su principal objetivo es permitir a los profesores (o a cualquier usuario del dominio) crear Grupos de Google a partir de los participantes de sus cursos de Classroom de una manera rápida, segura y controlada.
+**Classroom Groups Proxy** es una aplicación web desarrollada en Google Apps Script que sirve como un puente entre Google Classroom y Google Groups. Su principal objetivo es permitir al profesorado (o a cualquier usuario del dominio) crear Grupos de Google a partir de los participantes de sus cursos de Classroom de una manera rápida, segura y controlada.
 
 Esta herramienta soluciona la necesidad de interactuar con los miembros de una clase fuera de los límites de Google Classroom, facilitando acciones como:
 
-*   **Compartir recursos fácilmente**: Enviar por correo enlaces a gems de Gemini, cuadernos de NotebookLM, archivos de Drive o cualquier otro recurso web a toda la clase o solo a los profesores.
+*   **Compartir recursos fácilmente**: Enviar por correo enlaces a gems de Gemini, cuadernos de NotebookLM, archivos de Drive o cualquier otro recurso web a toda la clase o solo al profesorado.
 *   **Crear espacios de comunicación**: Generar un grupo de chat en Google Chat a partir del nuevo grupo de Google.
 *   **Organizar eventos**: Invitar a todos los miembros de la clase a un evento en Google Calendar con una sola dirección de correo.
 *   **Establecer un canal de comunicación formal**: Utilizar la lista de correo del grupo como un canal oficial para anuncios importantes.
@@ -47,7 +47,7 @@ La interfaz de la aplicación guía al usuario a través de un proceso sencillo 
 ### Paso 1: Selección del Curso
 
 *   La aplicación detecta automáticamente el usuario que la está utilizando y le presenta un menú desplegable con todos los cursos de Google Classroom en los que es profesor.
-*   Al seleccionar un curso, se muestran los **grupos automáticos** que Classroom ya crea por defecto (uno para los profesores y otro para toda la clase), que pueden ser suficientes para ciertas tareas como compartir archivos en Drive.
+*   Al seleccionar un curso, se muestran los **grupos automáticos** que Classroom ya crea por defecto (uno para el profesorado y otro para toda la clase), que pueden ser suficientes para ciertas tareas como compartir archivos en Drive.
 
 ### Paso 2: Selección de Usuarios
 
@@ -55,13 +55,13 @@ La interfaz de la aplicación guía al usuario a través de un proceso sencillo 
 *   **Selección flexible**:
     *   Por defecto, todos los usuarios de ambas listas están preseleccionados.
     *   Puedes desmarcar a cualquier usuario individualmente.
-    *   Puedes usar los checkboxes "Seleccionar todos" para marcar o desmarcar rápidamente a todos los profesores o a todos los alumnos.
+    *   Puedes usar los checkboxes "Seleccionar todos" para marcar o desmarcar rápidamente a todo el profesorado o a todo el alumnado.
     *   El usuario que está creando el grupo (el profesor) siempre se incluye como **propietario** del nuevo grupo y no puede ser deseleccionado.
 
 ### Paso 3: Configuración y Creación del Grupo
 
 *   Antes de crear el grupo, puedes ajustar tres configuraciones clave:
-    1.  **Hacer que el profesorado sea administrador del grupo**: Si está marcada, todos los profesores del curso (excepto el propietario) obtendrán el rol de "Manager" en el grupo, permitiéndoles gestionar miembros y ajustes.
+    1.  **Hacer que el profesorado sea administrador del grupo**: Si está marcada, todo el profesorado del curso (excepto el propietario) obtendrán el rol de "Manager" en el grupo, permitiéndoles gestionar miembros y ajustes.
     2.  **Solo los propietarios y administradores podrán enviar mensajes**: Restringe la capacidad de publicar en el grupo solo a los managers y propietarios. Muy útil para grupos unidireccionales de anuncios.
     3.  **Hacer visible en Google Grupos**: Si se activa, el grupo aparecerá en el directorio de Google Groups y guardará un archivo de todas las conversaciones enviadas a la lista de correo.
 *   Al hacer clic en **"Crear Grupo"**, el backend se encarga de todo el proceso. El email del grupo se genera automáticamente con el formato `cgp-[nombre-del-curso]-[id-del-curso]@[dominio]`.
