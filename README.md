@@ -21,24 +21,17 @@ El despliegue de esta herramienta es un proceso que debe realizar un **Super Adm
 
 ### Pasos para el Despliegue
 
-1.  **Crear una Hoja de Cálculo de Google**: Crea una nueva Google Sheet en tu Drive.
-2.  **Preparar las Pestañas de Registro**: Renombra la pestaña por defecto a `Registro de Operaciones` y crea una segunda pestaña llamada `Grupos Creados`. Estas hojas servirán para registrar la actividad de la aplicación.
-3.  **Abrir el Editor de Apps Script**: Dentro de la hoja de cálculo, ve a `Extensiones > Apps Script`.
-4.  **Copiar el Código del Proyecto**:
-    *   Se abrirá un proyecto de Apps Script con un fichero `Código.gs`. Borra su contenido y pega el contenido del fichero [`Code.gs`](Code.gs) de este repositorio.
-    *   Crea el fichero `appsscript.json` en el editor y pega el contenido del fichero [`appsscript.json`](appsscript.json) de este repositorio. Este paso es **crucial** para que se activen las APIs y permisos necesarios.
-    *   Crea un nuevo fichero HTML llamado `index.html`. Para ello, haz clic en el `+` junto a `Archivos` y selecciona `HTML`. Pega en él el contenido del fichero [`index.html`](index.html) de este repositorio.
-    *   Crea otro fichero HTML llamado `main.html` y pega en él el contenido del fichero [`main.html`](main.html) de este repositorio.
-5.  **Guardar el Proyecto**: Haz clic en el icono de guardar (disquete).
-6.  **Desplegar la Aplicación Web**:
-    *   Haz clic en el botón `Desplegar` y selecciona `Nuevo despliegue`.
+1.  **Obtener una copia de la plantilla**: Accede a [ESTA PLANTILLA DE GOOGLE SHEETS](https://docs.google.com/spreadsheets/d/{ID_ARCHIVO}/copy) y haz una copia en tu Google Drive. La hoja ya contiene el código del proyecto y las pestañas "Registro de Operaciones" y "Grupos Creados".
+2.  **Abrir el Editor de Apps Script**: Dentro de tu copia de la hoja de cálculo, ve a `Extensiones > Apps Script`.
+3.  **Desplegar la Aplicación Web**:
+    *   Una vez en el editor, haz clic en el botón `Desplegar` y selecciona `Nuevo despliegue`.
     *   En la ventana de configuración, ajusta las siguientes opciones:
         *   **Descripción**: Dale un nombre descriptivo, como "Classroom Groups Proxy".
         *   **Ejecutar como**: `Yo` (el correo del administrador que está realizando el despliegue).
         *   **Quién tiene acceso**: `Cualquier usuario del dominio [Tu Dominio]`.
     *   Haz clic en `Desplegar`.
-7.  **Autorizar los Permisos**: La primera vez que despliegues, Google te pedirá que autorices los permisos (scopes de OAuth) que el script necesita para funcionar. Revisa y acepta los permisos.
-8.  **Obtener y Compartir la URL**: Una vez desplegada, se te proporcionará una URL de la aplicación web. Esta es la URL que debes compartir con los profesores y otros usuarios de tu dominio para que puedan utilizar la herramienta.
+4.  **Autorizar los Permisos**: La primera vez que despliegues, Google te pedirá que autorices los permisos (scopes de OAuth) que el script necesita para funcionar. Revisa y acepta los permisos.
+5.  **Obtener y Compartir la URL**: Una vez desplegada, se te proporcionará una URL de la aplicación web. Esta es la URL que debes compartir con los profesores y otros usuarios de tu dominio para que puedan utilizar la herramienta.
 
 ## 3. Funcionalidades Detalladas
 
