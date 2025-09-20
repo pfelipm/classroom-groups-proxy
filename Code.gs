@@ -138,7 +138,9 @@ function obtenerUsuarios(idCurso) {
  * @returns {object} Un objeto con el resultado de la operación.
  */
 function crearGrupoDeClase(datosGrupo) {
-  const { courseId, courseName, members, ownerEmail, domain, makeVisible, makeTeachersManagers, allTeacherEmails } = datosGrupo;
+  // --- INICIO DE LA MODIFICACIÓN ---
+  const { courseId, courseName, members, ownerEmail, domain, makeVisible, makeTeachersManagers, allTeacherEmails, restrictPostingToManagers } = datosGrupo;
+  // --- FIN DE LA MODIFICACIÓN ---
   
   const cleanName = courseName.toLowerCase().replace(/[^a-z0-9]/g, '-');
   const truncatedCleanName = cleanName.slice(0, 30);
@@ -158,22 +160,17 @@ function crearGrupoDeClase(datosGrupo) {
       description: `Grupo para la clase de Classroom '${courseName}' (ID: ${courseId}). Creado por ${ownerEmail}.`
     });
 
-    // --- INICIO DE LA MODIFICACIÓN: Lógica de Binary Exponential Backoff ---
     let intentos = 0;
     let grupoVerificado = false;
     const MAX_INTENTOS = 5;
 
-    // Bucle para verificar que el grupo existe, con un máximo de 5 intentos.
     while (intentos < MAX_INTENTOS && !grupoVerificado) {
       try {
-        // Se intenta obtener el grupo para confirmar que se ha propagado.
         AdminDirectory.Groups.get(newGroup.email);
-        grupoVerificado = true; // Si no hay error, el grupo existe y podemos continuar.
+        grupoVerificado = true;
       } catch (e) {
-        // Si hay error, el grupo aún no está disponible.
         intentos++;
         if (intentos < MAX_INTENTOS) {
-          // Se calcula el tiempo de espera: 2^intentos segundos + hasta 1 segundo aleatorio (jitter).
           const tiempoEspera = Math.pow(2, intentos) * 1000 + Math.floor(Math.random() * 1000);
           console.log(`Intento ${intentos} de verificación fallido. Reintentando en ${tiempoEspera} ms...`);
           Utilities.sleep(tiempoEspera);
@@ -181,17 +178,12 @@ function crearGrupoDeClase(datosGrupo) {
       }
     }
 
-    // Si tras los 5 intentos el grupo no se ha verificado, lanzar un error.
     if (!grupoVerificado) {
       throw new Error('No se pudo confirmar la creación del grupo tras varios intentos.');
     }
     
-    // --- FIN DE LA MODIFICACIÓN ---
-
-
-    // 2. Añadir miembros (solo si el grupo ha sido verificado)
     finalMembers.forEach(memberEmail => {
-      let role = 'MEMBER'; // Rol por defecto
+      let role = 'MEMBER';
       if (memberEmail === ownerEmail) {
         role = 'OWNER';
       } else if (makeTeachersManagers && allTeacherEmails.includes(memberEmail)) {
@@ -204,19 +196,21 @@ function crearGrupoDeClase(datosGrupo) {
       }, newGroup.id);
     });
 
+    // --- INICIO DE LA MODIFICACIÓN: Lógica de ajustes dinámica ---
     // 3. Establecer los ajustes del grupo.
     const groupSettings = {
       whoCanJoin: 'INVITED_CAN_JOIN',
-      isArchived: true, // Si true se guardan los mensajes enviados
-      allowWebPosting: true,
-      whoCanDiscoverGroup: 'ALL_IN_DOMAIN_CAN_DISCOVER', // Si "ALL_MEMBERS_CAN_DISCOVER" a menudo error "WHO_CAN_VIEW_MEMBERSHIP_CANNOT_BE_BROADER_THAN_WHO_CAN_SEE_GROUP"
-      whoCanPostMessage: 'ALL_MANAGERS_CAN_POST', // Añadir check para ALL_MEMBERS_CAN_POST
+      allowWebPosting: makeVisible,
+      isArchived: makeVisible,
+      whoCanDiscoverGroup: 'ALL_IN_DOMAIN_CAN_DISCOVER',
+      whoCanPostMessage: restrictPostingToManagers ? 'ALL_MANAGERS_CAN_POST' : 'ALL_MEMBERS_CAN_POST',
       whoCanViewGroup: 'ALL_MEMBERS_CAN_VIEW',
-      whoCanViewMembership: 'ALL_MEMBERS_CAN_VIEW', // El ajuste "Quién puede ver las direcciones de email de los miembros" no parece estar expuesto, por defecto "ALL_IN_DOMAIN (con estos ajustes)
+      whoCanViewMembership: 'ALL_MEMBERS_CAN_VIEW',
       whoCanContactOwner: 'ALL_MEMBERS_CAN_CONTACT',
       archiveOnly: false,
     };
     AdminGroupsSettings.Groups.patch(groupSettings, newGroup.email);
+    // --- FIN DE LA MODIFICACIÓN ---
 
     _logOperation('Crear Grupo', 'Éxito', `Grupo ${groupEmail} creado. Visible en Grupos: ${makeVisible}.`);
     _logGroupCreation(newGroup.id, groupName, groupEmail, courseId, courseName, ownerEmail, finalMembers.length);
@@ -244,7 +238,6 @@ function crearGrupoDeClase(datosGrupo) {
       }
     }
 
-    // El error lanzado por el bucle de reintento será capturado aquí y devuelto al frontend.
     throw new Error(JSON.stringify({ key: 'groupCreateError' }));
   }
 }
