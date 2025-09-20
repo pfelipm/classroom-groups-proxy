@@ -103,4 +103,4 @@ The project follows a simple client-server architecture, typical of Apps Script 
 
 ## 5. License
 
-This project is licensed under the **GNU General Public License v3.0 (GNU GPL v3)**.
+This project is licensed under the **[GNU General Public License v3.0 (GNU GPL v3)](LICENSE)**.

@@ -103,4 +103,4 @@ El proyecto sigue una arquitectura cliente-servidor simple, típica de las aplic
 
 ## 5. Licencia
 
-Este proyecto está licenciado bajo la **Licencia Pública General de GNU v3.0 (GNU GPL v3)**.
+Este proyecto está licenciado bajo la **[Licencia Pública General de GNU v3.0 (GNU GPL v3)](LICENSE)**.
