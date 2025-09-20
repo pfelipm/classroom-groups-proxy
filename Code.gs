@@ -138,9 +138,7 @@ function obtenerUsuarios(idCurso) {
  * @returns {object} Un objeto con el resultado de la operación.
  */
 function crearGrupoDeClase(datosGrupo) {
-  // --- INICIO DE LA MODIFICACIÓN ---
   const { courseId, courseName, members, ownerEmail, domain, makeVisible, makeTeachersManagers, allTeacherEmails, restrictPostingToManagers } = datosGrupo;
-  // --- FIN DE LA MODIFICACIÓN ---
   
   const cleanName = courseName.toLowerCase().replace(/[^a-z0-9]/g, '-');
   const truncatedCleanName = cleanName.slice(0, 30);
@@ -153,7 +151,6 @@ function crearGrupoDeClase(datosGrupo) {
   const finalMembers = Array.from(memberSet);
 
   try {
-    // 1. Crear el grupo de directorio
     const newGroup = AdminDirectory.Groups.insert({
       email: groupEmail,
       name: groupName,
@@ -196,20 +193,29 @@ function crearGrupoDeClase(datosGrupo) {
       }, newGroup.id);
     });
 
-    // --- INICIO DE LA MODIFICACIÓN: Lógica de ajustes dinámica ---
-    // 3. Establecer los ajustes del grupo.
-    const groupSettings = {
-      whoCanJoin: 'INVITED_CAN_JOIN',
-      allowWebPosting: makeVisible,
-      isArchived: makeVisible,
-      whoCanDiscoverGroup: 'ALL_IN_DOMAIN_CAN_DISCOVER',
-      whoCanPostMessage: restrictPostingToManagers ? 'ALL_MANAGERS_CAN_POST' : 'ALL_MEMBERS_CAN_POST',
-      whoCanViewGroup: 'ALL_MEMBERS_CAN_VIEW',
-      whoCanViewMembership: 'ALL_MEMBERS_CAN_VIEW',
-      whoCanContactOwner: 'ALL_MEMBERS_CAN_CONTACT',
-      archiveOnly: false,
-    };
-    AdminGroupsSettings.Groups.patch(groupSettings, newGroup.email);
+    // --- INICIO DE LA MODIFICACIÓN: Manejo de error específico para los ajustes ---
+    try {
+      const groupSettings = {
+        whoCanJoin: 'INVITED_CAN_JOIN',
+        allowWebPosting: makeVisible,
+        isArchived: makeVisible,
+        whoCanDiscoverGroup: 'ALL_IN_DOMAIN_CAN_DISCOVER',
+        whoCanPostMessage: restrictPostingToManagers ? 'ALL_MANAGERS_CAN_POST' : 'ALL_MEMBERS_CAN_POST',
+        whoCanViewGroup: 'ALL_MEMBERS_CAN_VIEW',
+        whoCanViewMembership: 'ALL_MEMBERS_CAN_VIEW',
+        whoCanContactOwner: 'ALL_MEMBERS_CAN_CONTACT',
+        archiveOnly: false,
+      };
+      AdminGroupsSettings.Groups.patch(groupSettings, newGroup.email);
+    } catch (settingsError) {
+      // Si falla la aplicación de ajustes, se lanza un error específico.
+      console.error(`Error al aplicar ajustes al grupo ${groupEmail}: ${settingsError.stack}`);
+      _logOperation('Aplicar Ajustes Grupo', 'Error', `Grupo ${groupEmail}. ${settingsError.message}`);
+      throw new Error(JSON.stringify({
+        key: 'groupSettingsError',
+        params: { groupEmail: groupEmail } // Se incluye el email para mostrarlo al usuario.
+      }));
+    }
     // --- FIN DE LA MODIFICACIÓN ---
 
     _logOperation('Crear Grupo', 'Éxito', `Grupo ${groupEmail} creado. Visible en Grupos: ${makeVisible}.`);
@@ -222,6 +228,11 @@ function crearGrupoDeClase(datosGrupo) {
     _logOperation('Crear Grupo', 'Error', `Clase: ${courseName}. ${error.message}`);
     
     const errorMessage = error.message || '';
+
+    // Si el error ya es un JSON nuestro (como el de los ajustes), lo relanzamos.
+    if (errorMessage.startsWith('{"key":"groupSettingsError"')) {
+      throw error;
+    }
 
     if (errorMessage.includes('Entity already exists.')) {
        throw new Error(JSON.stringify({

@@ -23,9 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
     createGroupBtn: document.getElementById('create-group-btn'),
     makeGroupVisibleCheck: document.getElementById('make-group-visible-check'),
     makeTeachersManagersCheck: document.getElementById('make-teachers-managers-check'),
-    // --- INICIO DE LA MODIFICACIÓN ---
     restrictPostingCheck: document.getElementById('restrict-posting-check'),
-    // --- FIN DE LA MODIFICACIÓN ---
     courseEmailsSection: document.getElementById('course-emails-section'),
     teacherGroupEmailSpan: document.getElementById('teacher-group-email'),
     courseGroupEmailSpan: document.getElementById('course-group-email'),
@@ -63,9 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
       createGroupBtn: "Crear Grupo",
       makeGroupVisibleLabel: "Hacer visible en Google Grupos (con archivo de conversaciones)",
       makeTeachersManagersLabel: "Hacer que el profesorado sea administrador del grupo",
-      // --- INICIO DE LA MODIFICACIÓN ---
       restrictPostingLabel: "Solo los propietarios y administradores podrán enviar mensajes",
-      // --- FIN DE LA MODIFICACIÓN ---
       errorTitle: "Error",
       warningTitle: "Aviso",
       successTitle: "Éxito",
@@ -77,10 +73,13 @@ document.addEventListener('DOMContentLoaded', function() {
       groupCreateSuccess: "¡Grupo creado con éxito!",
       groupCreateError: "Ocurrió un error al crear el grupo.",
       groupExistsError: "El grupo con email {{groupEmail}} ya existe.",
+      groupSettingsError: "El grupo se creó con éxito, pero falló la aplicación de los ajustes de configuración. Por favor, configura el grupo manualmente en Google Groups.",
       memberNotFoundError: "No se pudo crear el grupo porque uno de los miembros seleccionados no existe. Revisa la lista de participantes del curso en Classroom.",
       groupInsertPermissionError: "No se pudo crear el grupo. La cuenta que desplegó esta aplicación no tiene permisos de administrador para crear grupos en el dominio. Por favor, contacta con el administrador de TI de tu organización.",
       exportError: "No hay datos para exportar.",
-      groupWithOnlyOwnerError: "¿En serio quieres crear un grupo para ti solo? Eso no tiene mucho sentido 🙃. Por favor, selecciona más miembros y vuelve a intentarlo.",
+      // --- INICIO DE LA MODIFICACIÓN ---
+      groupWithOnlyOwnerError: "Para que un grupo sea útil, debe tener al menos 3 miembros (tú y 2 más) 🙃. Por favor, asegúrate de tener seleccionados al menos a dos participantes además de ti.",
+      // --- FIN DE LA MODIFICACIÓN ---
       ownerIsAddedNote: "Nota: El usuario que crea el grupo (tú) será añadido siempre como propietario."
     },
     en: {
@@ -108,9 +107,7 @@ document.addEventListener('DOMContentLoaded', function() {
       createGroupBtn: "Create Group",
       makeGroupVisibleLabel: "Make visible in Google Groups (with conversation archive)",
       makeTeachersManagersLabel: "Make teachers group managers",
-      // --- INICIO DE LA MODIFICACIÓN ---
       restrictPostingLabel: "Only owners and managers can post messages",
-      // --- FIN DE LA MODIFICACIÓN ---
       errorTitle: "Error",
       warningTitle: "Warning",
       successTitle: "Success",
@@ -122,10 +119,13 @@ document.addEventListener('DOMContentLoaded', function() {
       groupCreateSuccess: "Group created successfully!",
       groupCreateError: "An error occurred while creating the group.",
       groupExistsError: "The group with email {{groupEmail}} already exists.",
+      groupSettingsError: "The group was created successfully, but applying the configuration settings failed. Please configure the group manually in Google Groups.",
       memberNotFoundError: "Could not create group because one of the selected members does not exist. Please check the participant list in the Classroom course.",
       groupInsertPermissionError: "Could not create group. The account that deployed this application does not have administrator permissions to create groups in the domain. Please contact your organization's IT administrator.",
       exportError: "There is no data to export.",
-      groupWithOnlyOwnerError: "Do you really want to create a group for just yourself? That doesn't make much sense 🙃. Please select more members and try again.",
+      // --- INICIO DE LA MODIFICACIÓN ---
+      groupWithOnlyOwnerError: "For a group to be useful, it should have at least 3 members (you and 2 others) 🙃. Please make sure you have at least two participants selected besides yourself.",
+      // --- FIN DE LA MODIFICACIÓN ---
       ownerIsAddedNote: "Note: The user creating the group (you) will always be added as an owner."
     }
   };
@@ -411,7 +411,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   elements.createGroupBtn.addEventListener('click', () => {
     const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
-    if (selectedCheckboxes.length <= 1) {
+    if (selectedCheckboxes.length <= 2) {
       showModal(translations[currentLang].warningTitle, translations[currentLang].groupWithOnlyOwnerError);
       return;
     }
@@ -432,9 +432,7 @@ document.addEventListener('DOMContentLoaded', function() {
       makeVisible: elements.makeGroupVisibleCheck.checked,
       makeTeachersManagers: elements.makeTeachersManagersCheck.checked,
       allTeacherEmails: currentTeachers,
-      // --- INICIO DE LA MODIFICACIÓN ---
       restrictPostingToManagers: elements.restrictPostingCheck.checked
-      // --- FIN DE LA MODIFICACIÓN ---
     };
 
     google.script.run
@@ -449,6 +447,7 @@ document.addEventListener('DOMContentLoaded', function() {
       .withFailureHandler(err => {
         showLoader(false);
         let finalMessage = translations[currentLang].groupCreateError;
+        let emailForCopy = null;
         try {
           const jsonMatch = err.message.match(/\{.*\}/);
           if (jsonMatch) {
@@ -458,6 +457,9 @@ document.addEventListener('DOMContentLoaded', function() {
               if (errorObj.params) {
                 for (const [paramKey, paramValue] of Object.entries(errorObj.params)) {
                   finalMessage = finalMessage.replace(`{{${paramKey}}}`, paramValue);
+                }
+                if (errorObj.params.groupEmail) {
+                   emailForCopy = errorObj.params.groupEmail;
                 }
               }
             } else {
@@ -469,7 +471,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (e) {
            finalMessage += `: ${err.message}`;
         }
-        showNotification(finalMessage, 'danger');
+        showNotification(finalMessage, 'danger', emailForCopy);
       })
       .crearGrupoDeClase(groupData);
   });
