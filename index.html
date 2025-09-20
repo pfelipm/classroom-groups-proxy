@@ -32,10 +32,10 @@
         </div>
         <p class="mt-2" data-i18n="loading">Cargando...</p>
       </div>
+      
+      <div id="notification-area" style="min-height: 60px;"></div>
 
       <div id="app-content">
-        <!-- Notificaciones -->
-        <div id="notification-area" style="min-height: 60px;"></div>
         
         <!-- Descripción de la App -->
         <div class="alert alert-info" data-i18n="appDescription">
@@ -116,22 +116,22 @@
           <div class="card-body">
             <p data-i18n="groupCreationDescription">Se creará un grupo con los usuarios seleccionados. El email del grupo se generará automáticamente.</p>
             
-            <!-- --- INICIO DE LA MODIFICACIÓN: Reordenación de checkboxes --- -->
             <div class="form-check form-switch mb-3">
               <input class="form-check-input" type="checkbox" role="switch" id="make-teachers-managers-check" checked>
               <label class="form-check-label" for="make-teachers-managers-check" data-i18n="makeTeachersManagersLabel">Hacer que el profesorado sea administrador del grupo</label>
             </div>
-
+            
+            <!-- INICIO DE LA MODIFICACIÓN -->
             <div class="form-check form-switch mb-3">
               <input class="form-check-input" type="checkbox" role="switch" id="restrict-posting-check" checked>
               <label class="form-check-label" for="restrict-posting-check" data-i18n="restrictPostingLabel">Solo los propietarios y administradores podrán enviar mensajes</label>
             </div>
-            
+            <!-- FIN DE LA MODIFICACIÓN -->
+
             <div class="form-check form-switch mb-3">
               <input class="form-check-input" type="checkbox" role="switch" id="make-group-visible-check" checked>
               <label class="form-check-label" for="make-group-visible-check" data-i18n="makeGroupVisibleLabel">Hacer visible en Google Grupos (con archivo de conversaciones)</label>
             </div>
-            <!-- --- FIN DE LA MODIFICACIÓN --- -->
 
             <button id="create-group-btn" class="btn btn-primary">
               <i class="bi bi-people-fill"></i> <span data-i18n="createGroupBtn">Crear Grupo</span>
@@ -142,15 +142,15 @@
       </div>
     </div>
 
-    <!-- Modal para avisos -->
-    <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+    <!-- Modal de Error -->
+    <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="infoModalLabel">Aviso</h5>
+            <h5 class="modal-title" id="errorModalLabel" data-i18n="warningTitle">Aviso</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body" id="infoModalBody">
+          <div class="modal-body" id="errorModalBody">
             ...
           </div>
           <div class="modal-footer">
@@ -159,7 +159,6 @@
         </div>
       </div>
     </div>
-
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" xintegrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>

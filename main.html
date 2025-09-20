@@ -4,8 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // --- VARIABLES Y ELEMENTOS DEL DOM ---
   let currentLang;
   let userInfo = {};
-  let currentTeachers = [];
-  let infoModalInstance = null;
+  let allTeachers = [];
   const elements = {
     loader: document.getElementById('loader'),
     appContent: document.getElementById('app-content'),
@@ -21,18 +20,22 @@ document.addEventListener('DOMContentLoaded', function() {
     exportUsersBtn: document.getElementById('export-users-btn'),
     groupCreationSection: document.getElementById('group-creation-section'),
     createGroupBtn: document.getElementById('create-group-btn'),
-    makeGroupVisibleCheck: document.getElementById('make-group-visible-check'),
     makeTeachersManagersCheck: document.getElementById('make-teachers-managers-check'),
     restrictPostingCheck: document.getElementById('restrict-posting-check'),
+    makeGroupVisibleCheck: document.getElementById('make-group-visible-check'),
     courseEmailsSection: document.getElementById('course-emails-section'),
     teacherGroupEmailSpan: document.getElementById('teacher-group-email'),
     courseGroupEmailSpan: document.getElementById('course-group-email'),
     copyTeacherEmailBtn: document.getElementById('copy-teacher-email-btn'),
-    copyCourseEmailBtn: document.getElementById('copy-course-email-btn'),
-    infoModal: document.getElementById('infoModal'),
-    infoModalLabel: document.getElementById('infoModalLabel'),
-    infoModalBody: document.getElementById('infoModalBody')
+    copyCourseEmailBtn: document.getElementById('copy-course-email-btn')
   };
+  
+  // --- INICIO DE LA MODIFICACIÓN: Lógica del modal ---
+  let errorModalInstance = null;
+  const errorModalElement = document.getElementById('errorModal');
+  const errorModalTitle = document.getElementById('errorModalTitle');
+  const errorModalBody = document.getElementById('errorModalBody');
+  // --- FIN DE LA MODIFICACIÓN ---
 
   // --- DICCIONARIO DE TRADUCCIONES (i18n) ---
   const translations = {
@@ -59,9 +62,9 @@ document.addEventListener('DOMContentLoaded', function() {
       groupCreationSectionTitle: "3. Crear Grupo de Google",
       groupCreationDescription: "Se creará un grupo con los usuarios seleccionados. El email del grupo se generará automáticamente.",
       createGroupBtn: "Crear Grupo",
-      makeGroupVisibleLabel: "Hacer visible en Google Grupos (con archivo de conversaciones)",
       makeTeachersManagersLabel: "Hacer que el profesorado sea administrador del grupo",
       restrictPostingLabel: "Solo los propietarios y administradores podrán enviar mensajes",
+      makeGroupVisibleLabel: "Hacer visible en Google Grupos (con archivo de conversaciones)",
       errorTitle: "Error",
       warningTitle: "Aviso",
       successTitle: "Éxito",
@@ -72,15 +75,14 @@ document.addEventListener('DOMContentLoaded', function() {
       userFetchFatalError: "Error fatal al obtener información del usuario",
       groupCreateSuccess: "¡Grupo creado con éxito!",
       groupCreateError: "Ocurrió un error al crear el grupo.",
+      groupSettingsError: "El grupo con email {{groupEmail}} se ha creado, pero ha ocurrido un error al aplicar la configuración. Por favor, revisa los ajustes del grupo manualmente en Google Groups.",
       groupExistsError: "El grupo con email {{groupEmail}} ya existe.",
-      groupSettingsError: "El grupo se creó con éxito, pero falló la aplicación de los ajustes de configuración. Por favor, configura el grupo manualmente en Google Groups.",
       memberNotFoundError: "No se pudo crear el grupo porque uno de los miembros seleccionados no existe. Revisa la lista de participantes del curso en Classroom.",
       groupInsertPermissionError: "No se pudo crear el grupo. La cuenta que desplegó esta aplicación no tiene permisos de administrador para crear grupos en el dominio. Por favor, contacta con el administrador de TI de tu organización.",
       exportError: "No hay datos para exportar.",
-      // --- INICIO DE LA MODIFICACIÓN ---
       groupWithOnlyOwnerError: "Para que un grupo sea útil, debe tener al menos 3 miembros (tú y 2 más) 🙃. Por favor, asegúrate de tener seleccionados al menos a dos participantes además de ti.",
-      // --- FIN DE LA MODIFICACIÓN ---
-      ownerIsAddedNote: "Nota: El usuario que crea el grupo (tú) será añadido siempre como propietario."
+      ownerIsAddedNote: "Nota: El usuario que crea el grupo (tú) será añadido siempre como propietario.",
+      deploymentAdminError: "Error de Configuración: Esta aplicación no ha sido desplegada por un usuario con permisos de administrador. Las funcionalidades están desactivadas. Por favor, contacta con el administrador de TI de tu organización para que realice el despliegue correctamente."
     },
     en: {
       appTitle: "Classroom Groups Proxy",
@@ -105,9 +107,9 @@ document.addEventListener('DOMContentLoaded', function() {
       groupCreationSectionTitle: "3. Create Google Group",
       groupCreationDescription: "A group will be created with the selected users. The group email will be generated automatically.",
       createGroupBtn: "Create Group",
-      makeGroupVisibleLabel: "Make visible in Google Groups (with conversation archive)",
       makeTeachersManagersLabel: "Make teachers group managers",
-      restrictPostingLabel: "Only owners and managers can post messages",
+      restrictPostingLabel: "Only owners and managers can send messages",
+      makeGroupVisibleLabel: "Make visible in Google Groups (with conversation archive)",
       errorTitle: "Error",
       warningTitle: "Warning",
       successTitle: "Success",
@@ -118,15 +120,14 @@ document.addEventListener('DOMContentLoaded', function() {
       userFetchFatalError: "Fatal error while fetching user information",
       groupCreateSuccess: "Group created successfully!",
       groupCreateError: "An error occurred while creating the group.",
+      groupSettingsError: "The group with email {{groupEmail}} has been created, but an error occurred while applying the settings. Please review the group settings manually in Google Groups.",
       groupExistsError: "The group with email {{groupEmail}} already exists.",
-      groupSettingsError: "The group was created successfully, but applying the configuration settings failed. Please configure the group manually in Google Groups.",
       memberNotFoundError: "Could not create group because one of the selected members does not exist. Please check the participant list in the Classroom course.",
       groupInsertPermissionError: "Could not create group. The account that deployed this application does not have administrator permissions to create groups in the domain. Please contact your organization's IT administrator.",
       exportError: "There is no data to export.",
-      // --- INICIO DE LA MODIFICACIÓN ---
       groupWithOnlyOwnerError: "For a group to be useful, it should have at least 3 members (you and 2 others) 🙃. Please make sure you have at least two participants selected besides yourself.",
-      // --- FIN DE LA MODIFICACIÓN ---
-      ownerIsAddedNote: "Note: The user creating the group (you) will always be added as an owner."
+      ownerIsAddedNote: "Note: The user creating the group (you) will always be added as an owner.",
+      deploymentAdminError: "Configuration Error: This application has not been deployed by a user with administrator permissions. Functionalities are disabled. Please contact your organization's IT administrator to perform the deployment correctly."
     }
   };
 
@@ -138,15 +139,7 @@ document.addEventListener('DOMContentLoaded', function() {
     elements.appContent.style.display = show ? 'none' : 'block';
   };
   
-  const showModal = (title, message) => {
-    if (!infoModalInstance) {
-      infoModalInstance = new bootstrap.Modal(elements.infoModal);
-    }
-    elements.infoModalLabel.textContent = title;
-    elements.infoModalBody.textContent = message;
-    infoModalInstance.show();
-  };
-
+  /** Muestra una notificación (alerta de Bootstrap) */
   const showNotification = (message, type = 'warning', emailToCopy = null) => {
     let title = '';
     let alertClass = '';
@@ -158,8 +151,15 @@ document.addEventListener('DOMContentLoaded', function() {
             alertClass = 'alert-success';
             break;
         case 'warning':
+            title = translations[currentLang].warningTitle;
+            alertClass = 'alert-warning';
+            break;
+        case 'fatal-danger':
+            title = translations[currentLang].errorTitle;
+            alertClass = 'alert-danger';
+            break;
         case 'danger':
-            title = (type === 'danger') ? translations[currentLang].errorTitle : translations[currentLang].warningTitle;
+            title = translations[currentLang].errorTitle;
             alertClass = 'alert-warning';
             break;
         default:
@@ -197,7 +197,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
   };
+  
+  // --- INICIO DE LA MODIFICACIÓN: Lógica del modal ---
+  const showModal = (title, message) => {
+    if (!errorModalInstance) {
+      errorModalInstance = new bootstrap.Modal(errorModalElement);
+    }
+    errorModalTitle.textContent = title;
+    errorModalBody.textContent = message;
+    errorModalInstance.show();
+  };
+  // --- FIN DE LA MODIFICACIÓN ---
 
+  /** Cambia el idioma de la interfaz */
   const setLanguage = (lang) => {
     elements.notificationArea.innerHTML = '';
     currentLang = lang;
@@ -222,6 +234,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   };
 
+  /** Copia un texto al portapapeles y muestra feedback en el botón */
   const copyToClipboard = (text, button) => {
     if (!text || text === 'N/A') return;
     navigator.clipboard.writeText(text).then(() => {
@@ -245,6 +258,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   };
 
+  /** Descarga contenido como un fichero CSV */
   const downloadCsv = (csvContent, filename) => {
     if (!csvContent) {
       showNotification(translations[currentLang].exportError, 'warning');
@@ -261,6 +275,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.body.removeChild(link);
   };
   
+  /** Rellena el selector con los cursos obtenidos del backend */
   const populateCourses = (courses) => {
     elements.courseSelect.innerHTML = `<option value="">${translations[currentLang].selectCourseDefault}</option>`;
     if (courses && courses.length > 0) {
@@ -279,6 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
     showLoader(false);
   };
   
+  /** Rellena las listas de usuarios (profesores y alumnos) */
   const populateUsers = (data) => {
     const usersCardBody = elements.usersSection.querySelector('.card-body');
     if (usersCardBody && !usersCardBody.querySelector('.owner-note')) {
@@ -289,7 +305,7 @@ document.addEventListener('DOMContentLoaded', function() {
         usersCardBody.insertBefore(note, usersCardBody.firstChild);
     }
     
-    currentTeachers = data.teachers.map(t => t.email);
+    allTeachers = data.teachers.map(t => t.email);
 
     const createUserCheckbox = (user, isSelectedByDefault) => {
       const isOwner = user.email === userInfo.email;
@@ -316,13 +332,14 @@ document.addEventListener('DOMContentLoaded', function() {
     elements.groupCreationSection.style.display = 'block';
     showLoader(false);
   };
-
+  
   const updateSelectAllStatus = (listContainer, masterCheckbox) => {
-    const checkboxes = listContainer.querySelectorAll('.user-checkbox:not(:disabled)');
-    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-    masterCheckbox.checked = allChecked;
+    const allCheckboxes = listContainer.querySelectorAll('.user-checkbox:not(:disabled)');
+    const checkedCheckboxes = listContainer.querySelectorAll('.user-checkbox:checked:not(:disabled)');
+    masterCheckbox.checked = allCheckboxes.length > 0 && allCheckboxes.length === checkedCheckboxes.length;
   };
 
+  /** Gestiona la selección/deselección de todos los checkboxes en una lista */
   const handleSelectAll = (masterCheckbox, listContainer) => {
     const checkboxes = listContainer.querySelectorAll('.user-checkbox');
     checkboxes.forEach(cb => {
@@ -404,10 +421,12 @@ document.addEventListener('DOMContentLoaded', function() {
       .exportarUsuariosCsv(courseId);
   });
   
-  elements.teachersList.addEventListener('change', () => updateSelectAllStatus(elements.teachersList, elements.selectAllTeachers));
-  elements.studentsList.addEventListener('change', () => updateSelectAllStatus(elements.studentsList, elements.selectAllStudents));
   elements.selectAllTeachers.addEventListener('change', () => handleSelectAll(elements.selectAllTeachers, elements.teachersList));
   elements.selectAllStudents.addEventListener('change', () => handleSelectAll(elements.selectAllStudents, elements.studentsList));
+
+  elements.teachersList.addEventListener('change', () => updateSelectAllStatus(elements.teachersList, elements.selectAllTeachers));
+  elements.studentsList.addEventListener('change', () => updateSelectAllStatus(elements.studentsList, elements.selectAllStudents));
+
 
   elements.createGroupBtn.addEventListener('click', () => {
     const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
@@ -431,8 +450,8 @@ document.addEventListener('DOMContentLoaded', function() {
       domain: userInfo.domain,
       makeVisible: elements.makeGroupVisibleCheck.checked,
       makeTeachersManagers: elements.makeTeachersManagersCheck.checked,
-      allTeacherEmails: currentTeachers,
-      restrictPostingToManagers: elements.restrictPostingCheck.checked
+      allTeacherEmails: allTeachers,
+      restrictPostingToManagers: elements.restrictPostingCheck.checked,
     };
 
     google.script.run
@@ -457,9 +476,9 @@ document.addEventListener('DOMContentLoaded', function() {
               if (errorObj.params) {
                 for (const [paramKey, paramValue] of Object.entries(errorObj.params)) {
                   finalMessage = finalMessage.replace(`{{${paramKey}}}`, paramValue);
-                }
-                if (errorObj.params.groupEmail) {
-                   emailForCopy = errorObj.params.groupEmail;
+                  if (paramKey === 'groupEmail') {
+                    emailForCopy = paramValue;
+                  }
                 }
               }
             } else {
@@ -485,8 +504,17 @@ document.addEventListener('DOMContentLoaded', function() {
     setLanguage(defaultLang);
     
     google.script.run
-      .withSuccessHandler(info => {
-        userInfo = info;
+      .withSuccessHandler(data => {
+        if (!data.esDeployerAdmin) {
+          showNotification(translations[currentLang].deploymentAdminError, 'fatal-danger');
+          const contentToDisable = document.getElementById('app-content');
+          contentToDisable.style.opacity = '0.5';
+          contentToDisable.style.pointerEvents = 'none';
+          showLoader(false);
+          return;
+        }
+        
+        userInfo = data.userInfo;
         google.script.run
           .withSuccessHandler(populateCourses)
           .withFailureHandler(err => {
@@ -499,7 +527,7 @@ document.addEventListener('DOMContentLoaded', function() {
         showNotification(`${translations[currentLang].userFetchFatalError}: ${err.message}`, 'danger');
         showLoader(false);
       })
-      .obtenerInfoUsuario();
+      .obtenerDatosIniciales();
   };
 
   initialize();

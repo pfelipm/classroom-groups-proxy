@@ -31,15 +31,30 @@ function include(filename) {
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
 }
 
+// --- INICIO DE LA MODIFICACIÓN: Lógica de inicialización ---
 /**
- * Obtiene la información del usuario que está visitando la webapp.
- * @returns {object} Un objeto con el email y el dominio del usuario.
+ * Obtiene los datos iniciales necesarios para la app: la información del usuario
+ * y si el usuario que ha desplegado la app es administrador.
+ * @returns {object} Un objeto con userInfo y esDeployerAdmin.
  */
-function obtenerInfoUsuario() {
-  const email = Session.getActiveUser().getEmail();
-  const domain = email.split('@')[1];
-  return { email: email, domain: domain };
+function obtenerDatosIniciales() {
+  const userEmail = Session.getActiveUser().getEmail();
+  const domain = userEmail.split('@')[1];
+  
+  // Como la app se ejecuta como USER_DEPLOYING, esta llamada comprueba
+  // los permisos del usuario que publicó el script.
+  const deployerIsAdmin = esUsuarioAdmin();
+
+  return {
+    userInfo: {
+      email: userEmail,
+      domain: domain
+    },
+    esDeployerAdmin: deployerIsAdmin
+  };
 }
+// --- FIN DE LA MODIFICACIÓN ---
+
 
 /**
  * Obtiene la lista de cursos de Classroom en los que el usuario activo es profesor,
@@ -193,7 +208,6 @@ function crearGrupoDeClase(datosGrupo) {
       }, newGroup.id);
     });
 
-    // --- INICIO DE LA MODIFICACIÓN: Manejo de error específico para los ajustes ---
     try {
       const groupSettings = {
         whoCanJoin: 'INVITED_CAN_JOIN',
@@ -208,15 +222,13 @@ function crearGrupoDeClase(datosGrupo) {
       };
       AdminGroupsSettings.Groups.patch(groupSettings, newGroup.email);
     } catch (settingsError) {
-      // Si falla la aplicación de ajustes, se lanza un error específico.
       console.error(`Error al aplicar ajustes al grupo ${groupEmail}: ${settingsError.stack}`);
       _logOperation('Aplicar Ajustes Grupo', 'Error', `Grupo ${groupEmail}. ${settingsError.message}`);
       throw new Error(JSON.stringify({
         key: 'groupSettingsError',
-        params: { groupEmail: groupEmail } // Se incluye el email para mostrarlo al usuario.
+        params: { groupEmail: groupEmail }
       }));
     }
-    // --- FIN DE LA MODIFICACIÓN ---
 
     _logOperation('Crear Grupo', 'Éxito', `Grupo ${groupEmail} creado. Visible en Grupos: ${makeVisible}.`);
     _logGroupCreation(newGroup.id, groupName, groupEmail, courseId, courseName, ownerEmail, finalMembers.length);
@@ -229,7 +241,6 @@ function crearGrupoDeClase(datosGrupo) {
     
     const errorMessage = error.message || '';
 
-    // Si el error ya es un JSON nuestro (como el de los ajustes), lo relanzamos.
     if (errorMessage.startsWith('{"key":"groupSettingsError"')) {
       throw error;
     }
@@ -316,5 +327,22 @@ function _logGroupCreation(groupId, groupName, groupEmail, courseId, courseName,
     groupsSheet.appendRow(['Fecha de Creación', 'ID del Grupo', 'Nombre del Grupo', 'Email del Grupo', 'ID de la Clase', 'Nombre de la Clase', 'Propietario', 'Nº Miembros']);
   }
   groupsSheet.appendRow([new Date(), groupId, groupName, groupEmail, courseId, courseName, owner, memberCount]);
+}
+
+/**
+ * Comprueba si el usuario que ejecuta la app tiene privilegios de administrador.
+ * @returns {boolean} True si es administrador, false en caso contrario.
+ */
+function esUsuarioAdmin() {
+  try {
+    // La sesión efectiva es la del usuario que desplegó la app,
+    // por lo que esto comprueba sus permisos.
+    const deployerEmail = Session.getEffectiveUser().getEmail();
+    const user = AdminDirectory.Users.get(deployerEmail);
+    return user.isAdmin || false;
+  } catch (e) {
+    console.warn(`Chequeo de admin fallido para ${Session.getEffectiveUser().getEmail()}: ${e.message}. Asumiendo que no es admin.`);
+    return false;
+  }
 }
 
