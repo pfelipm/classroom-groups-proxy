@@ -35,7 +35,7 @@ The deployment of this tool is a process that must be carried out by a **Super A
 
 ## 3. Detailed Features
 
-The application's interface guides the user through a simple three-step process.
+The application's interface guides the user through a simple three-step process (click on the `EN` button on the top right corner of the screen to forcefully display the UI in English).
 
 ![cgp-teaser3](readme-files/cgp-teaser3.png)
 
