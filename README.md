@@ -1,7 +1,3 @@
-![cgp-teaser1](readme-files/cgp-teaser1.png)
-![cgp-teaser2](readme-files/cgp-teaser2.png)
-![cgp-teaser3](readme-files/cgp-teaser3.png)
-
 🇬🇧 [English Version](README.en.md)
 
 # Classroom Groups Proxy
@@ -26,6 +22,10 @@ El despliegue de esta herramienta es un proceso que debe realizar un **Super Adm
 ### Pasos para el Despliegue
 
 1.  **Obtener una copia de la plantilla**: Accede a [ESTA PLANTILLA DE GOOGLE SHEETS](https://docs.google.com/spreadsheets/d/{ID_ARCHIVO}/copy) y haz una copia en tu Google Drive. La hoja ya contiene el código del proyecto y las pestañas "Registro de Operaciones" y "Grupos Creados".
+
+![cgp-teaser1](readme-files/cgp-teaser1.png)
+![cgp-teaser2](readme-files/cgp-teaser2.png)
+
 2.  **Abrir el Editor de Apps Script**: Dentro de tu copia de la hoja de cálculo, ve a `Extensiones > Apps Script`.
 3.  **Desplegar la Aplicación Web**:
     *   Una vez en el editor, haz clic en el botón `Desplegar` y selecciona `Nuevo despliegue`.
@@ -34,12 +34,14 @@ El despliegue de esta herramienta es un proceso que debe realizar un **Super Adm
         *   **Ejecutar como**: `Yo` (el correo del administrador que está realizando el despliegue).
         *   **Quién tiene acceso**: `Cualquier usuario del dominio [Tu Dominio]`.
     *   Haz clic en `Desplegar`.
-4.  **Autorizar los Permisos**: La primera vez que despliegues, Google te pedirá que autorices los permisos (scopes de OAuth) que el script necesita para funcionar. Revisa y acepta los permisos.
-5.  **Obtener y Compartir la URL**: Una vez desplegada, se te proporcionará una URL de la aplicación web. Esta es la URL que debes compartir con los profesores y otros usuarios de tu dominio para que puedan utilizar la herramienta.
+5.  **Autorizar los Permisos**: La primera vez que despliegues, Google te pedirá que autorices los permisos (scopes de OAuth) que el script necesita para funcionar. Revisa y acepta los permisos.
+6.  **Obtener y Compartir la URL**: Una vez desplegada, se te proporcionará una URL de la aplicación web. Esta es la URL que debes compartir con los profesores y otros usuarios de tu dominio para que puedan utilizar la herramienta.
 
 ## 3. Funcionalidades Detalladas
 
 La interfaz de la aplicación guía al usuario a través de un proceso sencillo de tres pasos.
+
+![cgp-teaser3](readme-files/cgp-teaser3.png)
 
 ### Paso 1: Selección del Curso
 
