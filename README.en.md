@@ -1,7 +1,3 @@
-![cgp-teaser1](readme-files/cgp-teaser1.png)
-![cgp-teaser2](readme-files/cgp-teaser2.png)
-![cgp-teaser3](readme-files/cgp-teaser3.png)
-
 🇪🇸 [Versión en Español](README.md)
 
 # Classroom Groups Proxy
@@ -41,6 +37,8 @@ The deployment of this tool is a process that must be carried out by a **Super A
 
 The application's interface guides the user through a simple three-step process.
 
+![cgp-teaser3](readme-files/cgp-teaser3.png)
+
 ### Step 1: Course Selection
 
 *   The application automatically detects the user and presents a dropdown menu with all the Google Classroom courses in which they are a teacher.
@@ -68,7 +66,10 @@ The application's interface guides the user through a simple three-step process.
 *   **CSV Export**: At each step, there are buttons to export the list of courses or the list of users from the selected course to a CSV file.
 *   **Activity Logging**: The spreadsheet hosting the script uses two tabs for activity logging. If these sheets do not exist, the script will create them on its first run:
     *   `Registro de Operaciones` (Operation Log): Saves a line for each action performed (loading courses, creating a group, errors, etc.), indicating who did it and when.
+      ![cgp-teaser2](readme-files/cgp-teaser2.png)
+
     *   `Grupos Creados` (Created Groups): Keeps a record of all groups that have been created with the tool.
+      ![cgp-teaser1](readme-files/cgp-teaser1.png)
 *   **Internationalization (i18n)**: The interface is available in Spanish and English and automatically switches based on the user's browser language.
 
 ## 4. Detailed Technical Analysis
