@@ -36,6 +36,7 @@ El despliegue de esta herramienta es un proceso que debe realizar un **Super Adm
 ## 3. Funcionalidades Detalladas
 
 La interfaz de la aplicación guía al usuario a través de un proceso sencillo de tres pasos.
+
 ![cgp-teaser2](readme-files/cgp-teaser3.png)
 
 ### Paso 1: Selección del Curso
@@ -65,8 +66,10 @@ La interfaz de la aplicación guía al usuario a través de un proceso sencillo 
 *   **Exportación a CSV**: En cada paso, hay botones para exportar la lista de cursos o la lista de usuarios del curso seleccionado a un fichero CSV.
 *   **Registro de Actividad**: La hoja de cálculo que aloja el script utiliza dos pestañas para el registro de actividad. Si estas no existen, el código las creará en la primera ejecución:
     *   `Registro de Operaciones`: Guarda una línea por cada acción realizada (carga de cursos, creación de grupo, errores, etc.), indicando quién la hizo y cuándo.
+    
       ![cgp-teaser2](readme-files/cgp-teaser2.png)
     *   `Grupos Creados`: Mantiene un registro de todos los grupos que se han creado con la herramienta.
+      
       ![cgp-teaser2](readme-files/cgp-teaser2.png)
 *   **Internacionalización (i18n)**: La interfaz está disponible en español e inglés y cambia automáticamente según el idioma del navegador del usuario.
 
