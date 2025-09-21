@@ -22,7 +22,6 @@ El despliegue de esta herramienta es un proceso que debe realizar un **Super Adm
 ### Pasos para el Despliegue
 
 1.  **Obtener una copia de la plantilla**: Accede a [ESTA PLANTILLA DE GOOGLE SHEETS](https://docs.google.com/spreadsheets/d/{ID_ARCHIVO}/copy) y haz una copia en tu Google Drive. La hoja ya contiene el código del proyecto y las pestañas "Registro de Operaciones" y "Grupos Creados".
-
 2.  **Abrir el Editor de Apps Script**: Dentro de tu copia de la hoja de cálculo, ve a `Extensiones > Apps Script`.
 3.  **Desplegar la Aplicación Web**:
     *   Una vez en el editor, haz clic en el botón `Desplegar` y selecciona `Nuevo despliegue`.
@@ -67,8 +66,7 @@ La interfaz de la aplicación guía al usuario a través de un proceso sencillo 
     *   `Registro de Operaciones`: Guarda una línea por cada acción realizada (carga de cursos, creación de grupo, errores, etc.), indicando quién la hizo y cuándo.
       ![cgp-teaser2](readme-files/cgp-teaser2.png)
     *   `Grupos Creados`: Mantiene un registro de todos los grupos que se han creado con la herramienta.
-      ![cgp-teaser3](readme-files/cgp-teaser3.png)
-
+      ![cgp-teaser2](readme-files/cgp-teaser2.png)
 *   **Internacionalización (i18n)**: La interfaz está disponible en español e inglés y cambia automáticamente según el idioma del navegador del usuario.
 
 ## 4. Análisis Técnico Detallado
