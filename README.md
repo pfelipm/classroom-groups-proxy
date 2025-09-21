@@ -23,7 +23,6 @@ El despliegue de esta herramienta es un proceso que debe realizar un **Super Adm
 
 1.  **Obtener una copia de la plantilla**: Accede a [ESTA PLANTILLA DE GOOGLE SHEETS](https://docs.google.com/spreadsheets/d/{ID_ARCHIVO}/copy) y haz una copia en tu Google Drive. La hoja ya contiene el código del proyecto y las pestañas "Registro de Operaciones" y "Grupos Creados".
 
-![cgp-teaser2](readme-files/cgp-teaser2.png)
 ![cgp-teaser1](readme-files/cgp-teaser1.png)
 
 2.  **Abrir el Editor de Apps Script**: Dentro de tu copia de la hoja de cálculo, ve a `Extensiones > Apps Script`.
@@ -40,8 +39,6 @@ El despliegue de esta herramienta es un proceso que debe realizar un **Super Adm
 ## 3. Funcionalidades Detalladas
 
 La interfaz de la aplicación guía al usuario a través de un proceso sencillo de tres pasos.
-
-![cgp-teaser3](readme-files/cgp-teaser3.png)
 
 ### Paso 1: Selección del Curso
 
@@ -70,7 +67,10 @@ La interfaz de la aplicación guía al usuario a través de un proceso sencillo 
 *   **Exportación a CSV**: En cada paso, hay botones para exportar la lista de cursos o la lista de usuarios del curso seleccionado a un fichero CSV.
 *   **Registro de Actividad**: La hoja de cálculo que aloja el script utiliza dos pestañas para el registro de actividad. Si estas no existen, el código las creará en la primera ejecución:
     *   `Registro de Operaciones`: Guarda una línea por cada acción realizada (carga de cursos, creación de grupo, errores, etc.), indicando quién la hizo y cuándo.
+    *   ![cgp-teaser2](readme-files/cgp-teaser2.png)
     *   `Grupos Creados`: Mantiene un registro de todos los grupos que se han creado con la herramienta.
+    *   ![cgp-teaser3](readme-files/cgp-teaser3.png)
+
 *   **Internacionalización (i18n)**: La interfaz está disponible en español e inglés y cambia automáticamente según el idioma del navegador del usuario.
 
 ## 4. Análisis Técnico Detallado
