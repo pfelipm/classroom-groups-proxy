@@ -1,3 +1,7 @@
+![cgp-teaser1](readme-files/cgp-teaser1.png)
+![cgp-teaser2](readme-files/cgp-teaser2.png)
+![cgp-teaser3](readme-files/cgp-teaser3.png)
+
 🇪🇸 [Versión en Español](README.md)
 
 # Classroom Groups Proxy
