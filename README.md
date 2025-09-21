@@ -36,6 +36,7 @@ El despliegue de esta herramienta es un proceso que debe realizar un **Super Adm
 ## 3. Funcionalidades Detalladas
 
 La interfaz de la aplicación guía al usuario a través de un proceso sencillo de tres pasos.
+![cgp-teaser2](readme-files/cgp-teaser3.png)
 
 ### Paso 1: Selección del Curso
 
