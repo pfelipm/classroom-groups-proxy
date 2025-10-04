@@ -17,7 +17,7 @@ This tool addresses the need to interact with class members outside the confines
 
 The application functions as a "proxy" because it must be deployed by a **Super Administrator** of the Google Workspace domain. This way, the group creation process (an administrative task) is performed with the administrator's permissions, but the action is initiated by a non-privileged user (a teacher), who can only see and act upon their own classes.
 
-## 2. How to Get, Deploy, and Use It
+## 2. Deployment and Usage
 
 The deployment of this tool is a process that must be carried out by a **Super Administrator** of the Google Workspace domain.
 
