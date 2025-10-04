@@ -21,7 +21,7 @@ The deployment of this tool is a process that must be carried out by a **Super A
 
 ### Deployment Steps
 
-1.  **Get a copy of the template**: Access [THIS GOOGLE SHEETS TEMPLATE](https://docs.google.com/spreadsheets/d/{ID_ARCHIVO}/copy) and make a copy in your Google Drive. The sheet already contains the project code and the "Registro de Operaciones" and "Grupos Creados" tabs.
+1.  **Get a copy of the template**: Access [this Google Sheets template]([esta plantilla de Google Sheets](https://docs.google.com/spreadsheets/d/1tQZSeCweF1CPpYHStlQrWu1zJ-CYRg9phQLmsSlCFyE/edit?usp=sharing) and make a copy in your Google Drive. The sheet already contains the project code and the "Registro de Operaciones" and "Grupos Creados" tabs.
 2.  **Open the Apps Script Editor**: Inside your copy of the spreadsheet, go to `Extensions > Apps Script`.
 3.  **Deploy the Web Application**:
     *   Once in the editor, click the `Deploy` button and select `New deployment`.
