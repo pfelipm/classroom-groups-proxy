@@ -21,7 +21,7 @@ El despliegue de esta herramienta es un proceso que debe realizar un **Super Adm
 
 ### Pasos para el Despliegue
 
-1.  **Obtener una copia de la plantilla**: Accede a [esta plantilla de Google Sheets](https://docs.google.com/spreadsheets/d/{ID_ARCHIVO}/copy](https://docs.google.com/spreadsheets/d/1tQZSeCweF1CPpYHStlQrWu1zJ-CYRg9phQLmsSlCFyE/edit?usp=sharing) y haz una copia en tu Google Drive. La hoja ya contiene el código del proyecto y las pestañas "Registro de Operaciones" y "Grupos Creados".
+1.  **Obtener una copia de la plantilla**: Accede a [esta plantilla de Google Sheets](https://docs.google.com/spreadsheets/d/1tQZSeCweF1CPpYHStlQrWu1zJ-CYRg9phQLmsSlCFyE/edit?usp=sharing) y haz una copia en tu Google Drive. La hoja ya contiene el código del proyecto y las pestañas "Registro de Operaciones" y "Grupos Creados".
 2.  **Abrir el Editor de Apps Script**: Dentro de tu copia de la hoja de cálculo, ve a `Extensiones > Apps Script`.
 3.  **Desplegar la Aplicación Web**:
     *   Una vez en el editor, haz clic en el botón `Desplegar` y selecciona `Nuevo despliegue`.
