@@ -2,7 +2,7 @@
 
 # Classroom Groups Proxy
 
-![GCP destacado (ES)](readme-files/GCP destacado (ES).png)
+![GCP destacado (ES)](./readme-files/GCP-destacado-ES.png)
 
 ## 1. Qué es y para qué sirve
 
