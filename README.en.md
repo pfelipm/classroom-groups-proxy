@@ -4,7 +4,7 @@
 
 ![GCP destacado (EN)](./readme-files/GCP-destacado-EN.png)
 
-## 1. What It Is and What It's For
+## 1. Overview and purpose
 
 **Classroom Groups Proxy** is a web application built on Google Apps Script that acts as a bridge between Google Classroom and Google Groups. Its main purpose is to allow teachers (or any user in the domain) to create Google Groups from their Google Classroom participants in a fast, secure, and controlled manner.
 
