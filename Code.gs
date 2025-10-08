@@ -31,7 +31,6 @@ function include(filename) {
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
 }
 
-// --- INICIO DE LA MODIFICACIÓN: Lógica de inicialización ---
 /**
  * Obtiene los datos iniciales necesarios para la app: la información del usuario
  * y si el usuario que ha desplegado la app es administrador.
@@ -41,8 +40,6 @@ function obtenerDatosIniciales() {
   const userEmail = Session.getActiveUser().getEmail();
   const domain = userEmail.split('@')[1];
   
-  // Como la app se ejecuta como USER_DEPLOYING, esta llamada comprueba
-  // los permisos del usuario que publicó el script.
   const deployerIsAdmin = esUsuarioAdmin();
 
   return {
@@ -53,7 +50,6 @@ function obtenerDatosIniciales() {
     esDeployerAdmin: deployerIsAdmin
   };
 }
-// --- FIN DE LA MODIFICACIÓN ---
 
 
 /**
@@ -146,6 +142,104 @@ function obtenerUsuarios(idCurso) {
   }
 }
 
+// --- INICIO DE LA REFACTORIZACIÓN ---
+
+/**
+ * Sincroniza los miembros de un grupo: elimina todos los existentes y añade los nuevos.
+ * @private
+ * @param {string} groupEmail El email del grupo a actualizar.
+ * @param {object} datosMiembros Objeto con la lista de nuevos miembros y sus roles.
+ */
+function _sincronizarMiembros(groupEmail, datosMiembros) {
+  const { ownerEmail, makeTeachersManagers, allTeacherEmails, members } = datosMiembros;
+  
+  // 1. Eliminar todos los miembros actuales
+  const currentMembers = AdminDirectory.Members.list(groupEmail).members || [];
+  currentMembers.forEach(member => {
+    try {
+      AdminDirectory.Members.remove(groupEmail, member.id);
+    } catch(e) {
+      console.warn(`No se pudo eliminar al miembro ${member.email} del grupo ${groupEmail}: ${e.message}`);
+    }
+  });
+
+  // 2. Añadir los nuevos miembros
+  const memberSet = new Set(members);
+  memberSet.add(ownerEmail);
+  const finalMembers = Array.from(memberSet);
+
+  finalMembers.forEach(memberEmail => {
+    let role = 'MEMBER';
+    if (memberEmail === ownerEmail) {
+      role = 'OWNER';
+    } else if (makeTeachersManagers && allTeacherEmails.includes(memberEmail)) {
+      role = 'MANAGER';
+    }
+    
+    AdminDirectory.Members.insert({
+      email: memberEmail,
+      role: role
+    }, groupEmail);
+  });
+}
+
+/**
+ * Aplica los ajustes de configuración a un grupo.
+ * @private
+ * @param {string} groupEmail El email del grupo a configurar.
+ * @param {object} datosAjustes Objeto con los ajustes a aplicar.
+ */
+function _aplicarAjustes(groupEmail, datosAjustes) {
+  const { makeVisible, restrictPostingToManagers } = datosAjustes;
+  try {
+    const groupSettings = {
+      whoCanJoin: 'INVITED_CAN_JOIN',
+      allowWebPosting: makeVisible,
+      isArchived: makeVisible,
+      whoCanDiscoverGroup: 'ALL_IN_DOMAIN_CAN_DISCOVER',
+      whoCanPostMessage: restrictPostingToManagers ? 'ALL_MANAGERS_CAN_POST' : 'ALL_MEMBERS_CAN_POST',
+      whoCanViewGroup: 'ALL_MEMBERS_CAN_VIEW',
+      whoCanViewMembership: 'ALL_MEMBERS_CAN_VIEW',
+      whoCanContactOwner: 'ALL_MEMBERS_CAN_CONTACT',
+      archiveOnly: false,
+    };
+    AdminGroupsSettings.Groups.patch(groupSettings, groupEmail);
+  } catch (settingsError) {
+    console.error(`Error al aplicar ajustes al grupo ${groupEmail}: ${settingsError.stack}`);
+    _logOperation('Aplicar Ajustes Grupo', 'Error', `Grupo ${groupEmail}. ${settingsError.message}`);
+    throw new Error(JSON.stringify({
+      key: 'groupSettingsError',
+      params: { groupEmail: groupEmail }
+    }));
+  }
+}
+
+/**
+ * Actualiza un grupo existente: sincroniza sus miembros y aplica los ajustes.
+ * @param {object} datosGrupo Objeto con la información para actualizar el grupo.
+ * @returns {object} Un objeto con el resultado de la operación.
+ */
+function actualizarGrupoDeClase(datosGrupo) {
+  const { courseName, courseId, domain } = datosGrupo;
+  const cleanName = courseName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+  const truncatedCleanName = cleanName.slice(0, 30);
+  const groupId = `cgp-${truncatedCleanName}-${courseId}`;
+  const groupEmail = `${groupId}@${domain}`;
+
+  try {
+    _sincronizarMiembros(groupEmail, datosGrupo);
+    _aplicarAjustes(groupEmail, datosGrupo);
+
+    _logOperation('Actualizar Grupo', 'Éxito', `Grupo ${groupEmail} actualizado.`);
+    return { success: true, message: `Grupo ${groupEmail} actualizado con éxito.` };
+  } catch (error) {
+    console.error(`Error al actualizar el grupo ${groupEmail}: ${error.stack}`);
+    _logOperation('Actualizar Grupo', 'Error', `Grupo ${groupEmail}. ${error.message}`);
+    throw new Error(JSON.stringify({ key: 'groupUpdateError' }));
+  }
+}
+
+
 /**
  * Crea un grupo de Google y añade los miembros seleccionados.
  * Se ejecuta con los permisos del administrador que desplegó la app.
@@ -153,17 +247,13 @@ function obtenerUsuarios(idCurso) {
  * @returns {object} Un objeto con el resultado de la operación.
  */
 function crearGrupoDeClase(datosGrupo) {
-  const { courseId, courseName, members, ownerEmail, domain, makeVisible, makeTeachersManagers, allTeacherEmails, restrictPostingToManagers } = datosGrupo;
+  const { courseId, courseName, ownerEmail, domain } = datosGrupo;
   
   const cleanName = courseName.toLowerCase().replace(/[^a-z0-9]/g, '-');
   const truncatedCleanName = cleanName.slice(0, 30);
   const groupId = `cgp-${truncatedCleanName}-${courseId}`;
   const groupEmail = `${groupId}@${domain}`;
   const groupName = `CGP - ${courseName}`;
-
-  const memberSet = new Set(members);
-  memberSet.add(ownerEmail);
-  const finalMembers = Array.from(memberSet);
 
   try {
     const newGroup = AdminDirectory.Groups.insert({
@@ -194,64 +284,28 @@ function crearGrupoDeClase(datosGrupo) {
       throw new Error('No se pudo confirmar la creación del grupo tras varios intentos.');
     }
     
-    finalMembers.forEach(memberEmail => {
-      let role = 'MEMBER';
-      if (memberEmail === ownerEmail) {
-        role = 'OWNER';
-      } else if (makeTeachersManagers && allTeacherEmails.includes(memberEmail)) {
-        role = 'MANAGER';
-      }
-      
-      AdminDirectory.Members.insert({
-        email: memberEmail,
-        role: role
-      }, newGroup.id);
-    });
+    // Usar las funciones auxiliares
+    _sincronizarMiembros(groupEmail, datosGrupo);
+    _aplicarAjustes(groupEmail, datosGrupo);
 
-    try {
-      const groupSettings = {
-        whoCanJoin: 'INVITED_CAN_JOIN',
-        allowWebPosting: makeVisible,
-        isArchived: makeVisible,
-        whoCanDiscoverGroup: 'ALL_IN_DOMAIN_CAN_DISCOVER',
-        whoCanPostMessage: restrictPostingToManagers ? 'ALL_MANAGERS_CAN_POST' : 'ALL_MEMBERS_CAN_POST',
-        whoCanViewGroup: 'ALL_MEMBERS_CAN_VIEW',
-        whoCanViewMembership: 'ALL_MEMBERS_CAN_VIEW',
-        whoCanContactOwner: 'ALL_MEMBERS_CAN_CONTACT',
-        archiveOnly: false,
-      };
-      AdminGroupsSettings.Groups.patch(groupSettings, newGroup.email);
-    } catch (settingsError) {
-      console.error(`Error al aplicar ajustes al grupo ${groupEmail}: ${settingsError.stack}`);
-      _logOperation('Aplicar Ajustes Grupo', 'Error', `Grupo ${groupEmail}. ${settingsError.message}`);
-      throw new Error(JSON.stringify({
-        key: 'groupSettingsError',
-        params: { groupEmail: groupEmail }
-      }));
-    }
-
-    _logOperation('Crear Grupo', 'Éxito', `Grupo ${groupEmail} creado. Visible en Grupos: ${makeVisible}.`);
-    _logGroupCreation(newGroup.id, groupName, groupEmail, courseId, courseName, ownerEmail, finalMembers.length);
+    _logOperation('Crear Grupo', 'Éxito', `Grupo ${groupEmail} creado.`);
+    _logGroupCreation(newGroup.id, groupName, groupEmail, courseId, courseName, ownerEmail, datosGrupo.members.length + 1);
     
     return { success: true, message: `Grupo ${groupEmail} creado con éxito.`, groupEmail: groupEmail };
 
   } catch (error) {
+    // El resto del manejo de errores sigue igual
     console.error(`Error original capturado en crearGrupoDeClase: ${error.stack}`);
     _logOperation('Crear Grupo', 'Error', `Clase: ${courseName}. ${error.message}`);
-    
     const errorMessage = error.message || '';
 
-    if (errorMessage.startsWith('{"key":"groupSettingsError"')) {
-      throw error;
-    }
-
+    if (errorMessage.startsWith('{"key":"groupSettingsError"')) { throw error; }
     if (errorMessage.includes('Entity already exists.')) {
        throw new Error(JSON.stringify({
          key: 'groupExistsError',
          params: { groupEmail: groupEmail }
        }));
     }
-    
     if (errorMessage.includes('Resource Not Found')) {
       if (error.stack.includes('Groups.insert')) {
          throw new Error(JSON.stringify({ key: 'groupInsertPermissionError' }));
@@ -259,10 +313,11 @@ function crearGrupoDeClase(datosGrupo) {
          throw new Error(JSON.stringify({ key: 'memberNotFoundError' }));
       }
     }
-
     throw new Error(JSON.stringify({ key: 'groupCreateError' }));
   }
 }
+// --- FIN DE LA REFACTORIZACIÓN ---
+
 
 /**
  * Genera y devuelve el contenido CSV de la lista de cursos.
@@ -315,11 +370,9 @@ function exportarUsuariosCsv(idCurso) {
  * @private
  */
 function _logOperation(action, status, details) {
-  // --- INICIO DE LA MODIFICACIÓN ---
   if (logSheet.getLastRow() === 0) {
     logSheet.appendRow(['Fecha', 'Usuario', 'Acción', 'Resultado', 'Información adicional']);
   }
-  // --- FIN DE LA MODIFICACIÓN ---
   logSheet.appendRow([new Date(), Session.getActiveUser().getEmail(), action, status, details]);
 }
 
@@ -340,8 +393,6 @@ function _logGroupCreation(groupId, groupName, groupEmail, courseId, courseName,
  */
 function esUsuarioAdmin() {
   try {
-    // La sesión efectiva es la del usuario que desplegó la app,
-    // por lo que esto comprueba sus permisos.
     const deployerEmail = Session.getEffectiveUser().getEmail();
     const user = AdminDirectory.Users.get(deployerEmail);
     return user.isAdmin || false;

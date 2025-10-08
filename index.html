@@ -121,12 +121,10 @@
               <label class="form-check-label" for="make-teachers-managers-check" data-i18n="makeTeachersManagersLabel">Hacer que el profesorado sea administrador del grupo</label>
             </div>
             
-            <!-- INICIO DE LA MODIFICACIÓN -->
             <div class="form-check form-switch mb-3">
               <input class="form-check-input" type="checkbox" role="switch" id="restrict-posting-check" checked>
               <label class="form-check-label" for="restrict-posting-check" data-i18n="restrictPostingLabel">Solo los propietarios y administradores podrán enviar mensajes</label>
             </div>
-            <!-- FIN DE LA MODIFICACIÓN -->
 
             <div class="form-check form-switch mb-3">
               <input class="form-check-input" type="checkbox" role="switch" id="make-group-visible-check" checked>
@@ -142,7 +140,7 @@
       </div>
     </div>
 
-    <!-- Modal de Error -->
+    <!-- Modal de Error Genérico -->
     <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -159,6 +157,27 @@
         </div>
       </div>
     </div>
+    
+    <!-- INICIO DE LA MODIFICACIÓN: Modal de Confirmación de Actualización -->
+    <div class="modal fade" id="updateConfirmationModal" tabindex="-1" aria-labelledby="updateModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="updateModalLabel" data-i18n="updateConfirmTitle">Confirmar Actualización</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" data-i18n="updateConfirmBody">
+            El grupo ya existe. ¿Deseas actualizarlo? Se eliminarán todas las membresías previas antes de añadir los nuevos miembros y se sobreescribirán los ajustes del grupo.
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="modalCancelBtn">Cancelar</button>
+            <button type="button" class="btn btn-warning" id="confirm-update-btn" data-i18n="modalUpdateBtn">Actualizar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- FIN DE LA MODIFICACIÓN -->
+
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" xintegrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
