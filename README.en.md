@@ -63,6 +63,8 @@ The application's interface guides the user through a simple three-step process 
     3.  **Make visible in Google Groups**: If enabled, the group will appear in the Google Groups directory and will keep an archive of all conversations sent to the mailing list.
 *   When you click **"Create / Update Group"**, the backend handles the entire process. If the group already exists, the application will ask you if you want to update it. In that case, all existing members will be removed and the new selected ones will be added, and the configuration settings from the form will be applied. The group email is automatically generated with the format `cgp-[course-name]-[course-id]@[domain]`.
 
+![cgp-actualizar-grupo](./readme-files/cgp-actualizar-grupo.png)
+
 ### Other Features
 
 *   **CSV Export**: At each step, there are buttons to export the list of courses or the list of users from the selected course to a CSV file.

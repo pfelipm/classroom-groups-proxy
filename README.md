@@ -63,6 +63,8 @@ La interfaz de la aplicación guía al usuario a través de un proceso sencillo 
     3.  **Hacer visible en Google Grupos**: Si se activa, el grupo aparecerá en el directorio de Google Groups y guardará un archivo de todas las conversaciones enviadas a la lista de correo.
 *   Al hacer clic en **"Crear / Actualizar Grupo"**, el backend se encarga de todo el proceso. Si el grupo ya existe, la aplicación te preguntará si deseas actualizarlo. En ese caso, se eliminarán todos los miembros existentes y se añadirán los nuevos seleccionados, y se aplicarán los ajustes de configuración del formulario. El email del grupo se genera automáticamente con el formato `cgp-[nombre-del-curso]-[id-del-curso]@[dominio]`.
 
+![cgp-actualizar-grupo](./readme-files/cgp-actualizar-grupo.png)
+
 ### Otras Funcionalidades
 
 *   **Exportación a CSV**: En cada paso, hay botones para exportar la lista de cursos o la lista de usuarios del curso seleccionado a un fichero CSV.
