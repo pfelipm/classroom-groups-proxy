@@ -6,7 +6,7 @@
 
 ## 1. Overview and purpose
 
-**Classroom Groups Proxy** is a web application built on Google Apps Script that acts as a bridge between Google Classroom and Google Groups. Its main purpose is to allow teachers (or any user in the domain) to create Google Groups from their Google Classroom participants in a fast, secure, and controlled manner.
+**Classroom Groups Proxy** is a web application built on Google Apps Script that acts as a bridge between Google Classroom and Google Groups. Its main purpose is to allow teachers (or any user in the domain) to create and update Google Groups from their Google Classroom participants in a fast, secure, and controlled manner.
 
 This tool addresses the need to interact with class members outside the confines of Google Classroom, facilitating actions such as:
 
@@ -55,13 +55,13 @@ The application's interface guides the user through a simple three-step process 
     *   You can use the "Select all" checkboxes to quickly check or uncheck all teachers or all students.
     *   The user creating the group (the teacher) is always included as the **owner** of the new group and cannot be deselected.
 
-### Step 3: Group Configuration and Creation
+### Step 3: Group Configuration, Creation and Update
 
 *   Before creating the group, you can adjust three key settings:
     1.  **Make teachers group managers**: If checked, all teachers in the course (except the owner) will get the "Manager" role in the group, allowing them to manage members and settings.
     2.  **Only owners and managers can send messages**: Restricts the ability to post in the group to only managers and owners. Very useful for one-way announcement groups.
     3.  **Make visible in Google Groups**: If enabled, the group will appear in the Google Groups directory and will keep an archive of all conversations sent to the mailing list.
-*   When you click **"Create Group"**, the backend handles the entire process. The group email is automatically generated with the format `cgp-[course-name]-[course-id]@[domain]`.
+*   When you click **"Create / Update Group"**, the backend handles the entire process. If the group already exists, the application will ask you if you want to update it. In that case, all existing members will be removed and the new selected ones will be added, and the configuration settings from the form will be applied. The group email is automatically generated with the format `cgp-[course-name]-[course-id]@[domain]`.
 
 ### Other Features
 
@@ -81,7 +81,8 @@ The project follows a simple client-server architecture, typical of Apps Script 
 *   `Code.gs`: This is the **backend** of the application.
     *   `doGet(e)`: The main entry point. It serves the `index.html` file when a user accesses the web app URL.
     *   `obtenerCursos()`, `obtenerUsuarios(idCurso)`: Functions that communicate with the **Google Classroom API** to get the necessary data.
-    *   `crearGrupoDeClase(datosGrupo)`: The most complex function. It uses the **Admin SDK Directory API** to create the group and add members, and the **Admin SDK Groups Settings API** to apply the visibility and posting permission settings. It includes a retry mechanism with exponential backoff to verify that the group has propagated through Google's systems before attempting to add members.
+    *   `crearGrupoDeClase(datosGrupo)`: The most complex function. It uses the **Admin SDK Directory API** to create the group and add members, and the **Admin SDK Groups Settings API** to apply the visibility and posting permission settings. It includes a retry mechanism with exponential backoff to verify that the group has propagated through Google's systems before attempting to add members. It also detects if a group already exists and, in that case, throws a specific error so the frontend can manage the update confirmation.
+    *   `actualizarGrupoDeClase(datosGrupo)`: A new function that handles updating an existing group. It removes all current members and adds the new ones, and applies the configuration settings from the form.
     *   `_logOperation(...)`, `_logGroupCreation(...)`: Internal functions for writing to the corresponding spreadsheets.
     *   `esUsuarioAdmin()`: Checks if the user who deployed the app is an administrator, a critical security check.
 

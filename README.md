@@ -6,7 +6,7 @@
 
 ## 1. Qué es y para qué sirve
 
-**Classroom Groups Proxy** es una aplicación web desarrollada en Google Apps Script que sirve como un puente entre Google Classroom y Google Groups. Su principal objetivo es permitir al profesorado (o a cualquier usuario del dominio) crear Grupos de Google a partir de los participantes de sus cursos de Classroom de una manera rápida, segura y controlada.
+**Classroom Groups Proxy** es una aplicación web desarrollada en Google Apps Script que sirve como un puente entre Google Classroom y Google Groups. Su principal objetivo es permitir al profesorado (o a cualquier usuario del dominio) crear y actualizar Grupos de Google a partir de los participantes de sus cursos de Classroom de una manera rápida, segura y controlada.
 
 Esta herramienta soluciona la necesidad de interactuar con los miembros de una clase fuera de los límites de Google Classroom, facilitando acciones como:
 
@@ -55,13 +55,13 @@ La interfaz de la aplicación guía al usuario a través de un proceso sencillo 
     *   Puedes usar los checkboxes "Seleccionar todos" para marcar o desmarcar rápidamente a todo el profesorado o a todo el alumnado.
     *   El usuario que está creando el grupo (el profesor) siempre se incluye como **propietario** del nuevo grupo y no puede ser deseleccionado.
 
-### Paso 3: Configuración y Creación del Grupo
+### Paso 3: Configuración, Creación y Actualización del Grupo
 
 *   Antes de crear el grupo, puedes ajustar tres configuraciones clave:
     1.  **Hacer que el profesorado sea administrador del grupo**: Si está marcada, todo el profesorado del curso (excepto el propietario) obtendrán el rol de "Manager" en el grupo, permitiéndoles gestionar miembros y ajustes.
     2.  **Solo los propietarios y administradores podrán enviar mensajes**: Restringe la capacidad de publicar en el grupo solo a los managers y propietarios. Muy útil para grupos unidireccionales de anuncios.
     3.  **Hacer visible en Google Grupos**: Si se activa, el grupo aparecerá en el directorio de Google Groups y guardará un archivo de todas las conversaciones enviadas a la lista de correo.
-*   Al hacer clic en **"Crear Grupo"**, el backend se encarga de todo el proceso. El email del grupo se genera automáticamente con el formato `cgp-[nombre-del-curso]-[id-del-curso]@[dominio]`.
+*   Al hacer clic en **"Crear / Actualizar Grupo"**, el backend se encarga de todo el proceso. Si el grupo ya existe, la aplicación te preguntará si deseas actualizarlo. En ese caso, se eliminarán todos los miembros existentes y se añadirán los nuevos seleccionados, y se aplicarán los ajustes de configuración del formulario. El email del grupo se genera automáticamente con el formato `cgp-[nombre-del-curso]-[id-del-curso]@[dominio]`.
 
 ### Otras Funcionalidades
 
@@ -80,7 +80,8 @@ El proyecto sigue una arquitectura cliente-servidor simple, típica de las aplic
 *   `Code.gs`: Es el **backend** de la aplicación.
     *   `doGet(e)`: Es el punto de entrada principal. Sirve el fichero `index.html` cuando un usuario accede a la URL de la aplicación.
     *   `obtenerCursos()`, `obtenerUsuarios(idCurso)`: Funciones que se comunican con la **API de Google Classroom** para obtener los datos necesarios.
-    *   `crearGrupoDeClase(datosGrupo)`: La función más compleja. Utiliza la **API Admin SDK Directory** para crear el grupo y añadir los miembros, y la **API Admin SDK Groups Settings** para aplicar la configuración de visibilidad y permisos de publicación. Incluye un mecanismo de reintentos con backoff exponencial para verificar que el grupo se ha propagado por los sistemas de Google antes de intentar añadir miembros.
+    *   `crearGrupoDeClase(datosGrupo)`: La función más compleja. Utiliza la **API Admin SDK Directory** para crear el grupo y añadir los miembros, y la **API Admin SDK Groups Settings** para aplicar la configuración de visibilidad y permisos de publicación. Incluye un mecanismo de reintentos con backoff exponencial para verificar que el grupo se ha propagado por los sistemas de Google antes de intentar añadir miembros. También se encarga de detectar si un grupo ya existe y, en ese caso, lanza un error específico para que el frontend pueda gestionar la confirmación de actualización.
+    *   `actualizarGrupoDeClase(datosGrupo)`: Una nueva función que se encarga de actualizar un grupo existente. Elimina todos los miembros actuales y añade los nuevos, y aplica los ajustes de configuración del formulario.
     *   `_logOperation(...)`, `_logGroupCreation(...)`: Funciones internas para escribir en las hojas de cálculo correspondientes.
     *   `esUsuarioAdmin()`: Comprueba si el usuario que desplegó la app es administrador, una comprobación de seguridad crítica.
 
