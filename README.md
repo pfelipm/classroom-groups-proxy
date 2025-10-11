@@ -84,7 +84,7 @@ El proyecto sigue una arquitectura cliente-servidor simple, típica de las aplic
     *   `doGet(e)`: Es el punto de entrada principal. Sirve el fichero `index.html` cuando un usuario accede a la URL de la aplicación.
     *   `obtenerCursos()`, `obtenerUsuarios(idCurso)`: Funciones que se comunican con la **API de Google Classroom** para obtener los datos necesarios.
     *   `crearGrupoDeClase(datosGrupo)`: La función más compleja. Utiliza la **API Admin SDK Directory** para crear el grupo y añadir los miembros, y la **API Admin SDK Groups Settings** para aplicar la configuración de visibilidad y permisos de publicación. Incluye un mecanismo de reintentos con backoff exponencial para verificar que el grupo se ha propagado por los sistemas de Google antes de intentar añadir miembros. También se encarga de detectar si un grupo ya existe y, en ese caso, lanza un error específico para que el frontend pueda gestionar la confirmación de actualización.
-    *   `actualizarGrupoDeClase(datosGrupo)`: Una nueva función que se encarga de actualizar un grupo existente. Elimina todos los miembros actuales y añade los nuevos, y aplica los ajustes de configuración del formulario.
+    *   `actualizarGrupoDeClase(datosGrupo)`: Una función que se encarga de actualizar un grupo existente. Elimina todos los miembros actuales y añade los nuevos, y aplica los ajustes de configuración del formulario.
     *   `_logOperation(...)`, `_logGroupCreation(...)`: Funciones internas para escribir en las hojas de cálculo correspondientes.
     *   `esUsuarioAdmin()`: Comprueba si el usuario que desplegó la app es administrador, una comprobación de seguridad crítica.
 

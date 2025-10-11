@@ -85,7 +85,7 @@ The project follows a simple client-server architecture, typical of Apps Script 
     *   `doGet(e)`: The main entry point. It serves the `index.html` file when a user accesses the web app URL.
     *   `obtenerCursos()`, `obtenerUsuarios(idCurso)`: Functions that communicate with the **Google Classroom API** to get the necessary data.
     *   `crearGrupoDeClase(datosGrupo)`: The most complex function. It uses the **Admin SDK Directory API** to create the group and add members, and the **Admin SDK Groups Settings API** to apply the visibility and posting permission settings. It includes a retry mechanism with exponential backoff to verify that the group has propagated through Google's systems before attempting to add members. It also detects if a group already exists and, in that case, throws a specific error so the frontend can manage the update confirmation.
-    *   `actualizarGrupoDeClase(datosGrupo)`: A new function that handles updating an existing group. It removes all current members and adds the new ones, and applies the configuration settings from the form.
+    *   `actualizarGrupoDeClase(datosGrupo)`: A function that handles updating an existing group. It removes all current members and adds the new ones, and applies the configuration settings from the form.
     *   `_logOperation(...)`, `_logGroupCreation(...)`: Internal functions for writing to the corresponding spreadsheets.
     *   `esUsuarioAdmin()`: Checks if the user who deployed the app is an administrator, a critical security check.
 
