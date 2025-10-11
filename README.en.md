@@ -63,8 +63,8 @@ The application's interface guides the user through a simple three-step process 
     3.  **Make visible in Google Groups**: If enabled, the group will appear in the Google Groups directory and will keep an archive of all conversations sent to the mailing list.
 *   When you click **"Create / Update Group"**, the backend handles the entire process. If the group already exists, the application will ask you if you want to update it. In that case, all existing members will be removed and the new selected ones will be added, and the configuration settings from the form will be applied. The group email is automatically generated with the format `cgp-[course-name]-[course-id]@[domain]`. It is important to note that this update process only affects the group members; the conversations and group history will not be affected.
 
-![cgp-3-en](readme-files/gcp-3-en.png)
-![cgp-4-en](readme-files/gcp-4-en.png)
+    ![cgp-3-en](readme-files/gcp-3-en.png)
+    ![cgp-4-en](readme-files/gcp-4-en.png)
 
 ### Other Features
 
