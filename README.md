@@ -39,7 +39,7 @@ El despliegue de esta herramienta es un proceso que debe realizar un **Super Adm
 
 La interfaz de la aplicación guía al usuario a través de un proceso sencillo de tres pasos.
 
-![cgp-teaser2](readme-files/cgp-teaser3.png)
+![cgp-2-es2](readme-files/gcp-2-es.png)
 
 ### Paso 1: Selección del Curso
 
@@ -63,7 +63,8 @@ La interfaz de la aplicación guía al usuario a través de un proceso sencillo 
     3.  **Hacer visible en Google Grupos**: Si se activa, el grupo aparecerá en el directorio de Google Groups y guardará un archivo de todas las conversaciones enviadas a la lista de correo.
 *   Al hacer clic en **"Crear / Actualizar Grupo"**, el backend se encarga de todo el proceso. Si el grupo ya existe, la aplicación te preguntará si deseas actualizarlo. En ese caso, se eliminarán todos los miembros existentes y se añadirán los nuevos seleccionados, y se aplicarán los ajustes de configuración del formulario. El email del grupo se genera automáticamente con el formato `cgp-[nombre-del-curso]-[id-del-curso]@[dominio]`.
 
-![cgp-actualizar-grupo](./readme-files/cgp-actualizar-grupo.png)
+![cgp-3-es](readme-files/gcp-3-es.png)
+![cgp-4-es](readme-files/gcp-4-es.png)
 
 ### Otras Funcionalidades
 
