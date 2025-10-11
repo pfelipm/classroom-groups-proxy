@@ -71,7 +71,7 @@ The application's interface guides the user through a simple three-step process 
 *   **CSV Export**: At each step, there are buttons to export the list of courses or the list of users from the selected course to a CSV file.
 *   **Activity Logging**: The spreadsheet hosting the script uses two tabs for activity logging. If these sheets do not exist, the script will create them on its first run:
     *   `Registro de Operaciones` (Operation Log): Saves a line for each action performed (loading courses, creating a group, errors, etc.), indicating who did it and when.
-        ![cgp-teaser2](readme-files/cgp-teaser2.png)
+    ![cgp-teaser2](readme-files/cgp-teaser2.png)
 
     *   `Grupos Creados` (Created Groups): Keeps a record of all groups that have been created with the tool.
     ![cgp-teaser1](readme-files/cgp-teaser1.png)
