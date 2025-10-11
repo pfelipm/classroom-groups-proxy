@@ -39,7 +39,7 @@ The deployment of this tool is a process that must be carried out by a **Super A
 
 The application's interface guides the user through a simple three-step process (click on the `EN` button on the top right corner of the screen to forcefully display the UI in English).
 
-![cgp-2-en](readme-files/cgp-2-en.png)
+![cgp-2-en](readme-files/gcp-2-en.png)
 
 ### Step 1: Course Selection
 
@@ -62,8 +62,9 @@ The application's interface guides the user through a simple three-step process 
     2.  **Only owners and managers can send messages**: Restricts the ability to post in the group to only managers and owners. Very useful for one-way announcement groups.
     3.  **Make visible in Google Groups**: If enabled, the group will appear in the Google Groups directory and will keep an archive of all conversations sent to the mailing list.
 *   When you click **"Create / Update Group"**, the backend handles the entire process. If the group already exists, the application will ask you if you want to update it. In that case, all existing members will be removed and the new selected ones will be added, and the configuration settings from the form will be applied. The group email is automatically generated with the format `cgp-[course-name]-[course-id]@[domain]`.
-![cgp-3-en](readme-files/cgp-3-en.png)
-![cgp-4-en](readme-files/cgp-4-en.png)
+
+![cgp-3-en](readme-files/gcp-3-en.png)
+![cgp-4-en](readme-files/gcp-4-en.png)
 
 ### Other Features
 
