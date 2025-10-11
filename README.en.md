@@ -74,7 +74,7 @@ The application's interface guides the user through a simple three-step process 
         ![cgp-teaser2](readme-files/cgp-teaser2.png)
 
     *   `Grupos Creados` (Created Groups): Keeps a record of all groups that have been created with the tool.
-        !cgp-teaser1](readme-files/cgp-teaser1.png)
+    ![cgp-teaser1](readme-files/cgp-teaser1.png)
 *   **Internationalization (i18n)**: The interface is available in Spanish and English and automatically switches based on the user's browser language.
 
 ## 4. Detailed Technical Analysis
